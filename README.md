@@ -98,6 +98,54 @@ Menú → *Importar vocab (CSV)*. Formato una línea por palabra:
 
 Se guarda en localStorage y entra al pool de encuentros.
 
+## Guardar tu progreso
+
+El juego **auto-guarda** en el navegador (localStorage) cada 30 segundos, al cerrar la
+pestaña y en cada evento importante. Además, en el menú **🧪** tienes:
+
+- **⬇ Exportar partida**: descarga un archivo `.json` con todo tu progreso
+  (respaldo, o para llevarlo a otra PC/navegador).
+- **⬆ Importar partida**: restaura ese archivo.
+- **☁ Nube (Supabase)**: sube/baja tu partida con un código propio, desde cualquier
+  dispositivo. Para activarla (gratis, ~5 min):
+  1. Crea un proyecto en [supabase.com](https://supabase.com).
+  2. En *SQL Editor* ejecuta:
+     ```sql
+     create table saves (
+       code text primary key,
+       data jsonb not null,
+       updated_at timestamptz default now()
+     );
+     alter table saves enable row level security;
+     create policy "lectura publica" on saves for select using (true);
+     create policy "escritura publica" on saves for insert with check (true);
+     create policy "actualizacion publica" on saves for update using (true);
+     ```
+  3. Copia la **URL** del proyecto y la **anon key** (Settings → API) y crea
+     `js/cloud-config.js`:
+     ```js
+     const CLOUD_CONFIG = {
+       url: "https://TU-PROYECTO.supabase.co",
+       key: "TU_ANON_KEY",
+     };
+     ```
+     (Ese archivo está en `.gitignore`: tus claves no se suben a GitHub.)
+  4. Recarga el juego: los botones ☁ ya funcionan. Elige un código difícil de
+     adivinar (cualquiera con tu código puede leer/escribir esa partida).
+
+## GitHub
+
+El repo ya está inicializado con git. Para subirlo (una sola vez):
+
+```
+gh auth login          # inicia sesión (flujo en el navegador)
+gh repo create pokoreano --private --source . --push
+```
+
+**Importante**: mantenlo **privado** — los assets de Cute Fantasy (versión gratuita)
+no permiten redistribución pública. Para publicarlo (p.ej. GitHub Pages) compra la
+licencia del pack o reemplaza esos assets.
+
 ## Créditos de assets
 
 - **Terreno, casas, árboles, animales y decoración**: [Cute Fantasy](https://kenmi-art.itch.io/cute-fantasy-rpg)

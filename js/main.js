@@ -83,6 +83,56 @@
   $("#crate-open-btn").addEventListener("click", () => UI.doOpenCrate());
   $("#crate-continue-btn").addEventListener("click", () => UI.closeCrate());
 
+  // ---------- Guardado: auto, exportar, importar, nube ----------
+  setInterval(() => State.save(), 30000);              // auto-guardado cada 30s
+  window.addEventListener("beforeunload", () => State.save()); // y al cerrar
+
+  const cloudStatus = (msg, ok) => {
+    const el = document.getElementById("cloud-status");
+    if (el){ el.textContent = msg; el.style.color = ok ? "var(--ok)" : "var(--bad)"; }
+  };
+  document.querySelectorAll("[data-save-action]").forEach(b => {
+    b.addEventListener("click", async () => {
+      const code = (document.getElementById("cloud-code")?.value || "").trim();
+      try {
+        switch (b.dataset.saveAction){
+          case "export":
+            State.save();
+            Cloud.exportFile();
+            cloudStatus("Partida exportada como archivo .json ✓", true);
+            break;
+          case "import": {
+            const input = document.getElementById("save-file-input");
+            input.onchange = async () => {
+              if (!input.files.length) return;
+              try {
+                await Cloud.importFile(input.files[0]);
+                cloudStatus("Partida importada ✓ recargando…", true);
+                setTimeout(() => location.reload(), 900);
+              } catch(e){ cloudStatus("Error al importar: " + e.message, false); }
+            };
+            input.click();
+            break;
+          }
+          case "cloud-up":
+            if (!Cloud.available()){ cloudStatus("Nube no configurada — mira el README (Supabase, 5 min).", false); break; }
+            State.save();
+            cloudStatus("Subiendo…", true);
+            await Cloud.push(code);
+            cloudStatus(`Partida subida a la nube con el código "${code}" ✓`, true);
+            break;
+          case "cloud-down":
+            if (!Cloud.available()){ cloudStatus("Nube no configurada — mira el README (Supabase, 5 min).", false); break; }
+            cloudStatus("Bajando…", true);
+            await Cloud.pull(code);
+            cloudStatus("Partida restaurada ✓ recargando…", true);
+            setTimeout(() => location.reload(), 900);
+            break;
+        }
+      } catch(e){ cloudStatus("Error: " + e.message, false); }
+    });
+  });
+
   // Trucos (modo prueba)
   document.querySelectorAll("[data-cheat]").forEach(b => {
     b.addEventListener("click", () => {

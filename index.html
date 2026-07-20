@@ -195,6 +195,17 @@
         <button class="btn small" data-action="close-modal">Volver</button>
       </header>
       <div class="cheats-body">
+        <h3 class="cheats-h">💾 Tu partida</h3>
+        <button class="btn primary" data-save-action="export">⬇ Exportar partida (archivo)</button>
+        <button class="btn" data-save-action="import">⬆ Importar partida (archivo)</button>
+        <input type="file" id="save-file-input" accept=".json,application/json" hidden />
+        <div class="cloud-row">
+          <input class="input" id="cloud-code" placeholder="código de partida (ej: karol2026)" maxlength="32" />
+          <button class="btn" data-save-action="cloud-up">☁⬆ Subir</button>
+          <button class="btn" data-save-action="cloud-down">☁⬇ Bajar</button>
+        </div>
+        <div class="cloud-status" id="cloud-status"></div>
+        <h3 class="cheats-h">🧪 Trucos (modo prueba)</h3>
         <button class="btn primary" data-cheat="coins">💰 +1000 monedas</button>
         <button class="btn primary" data-cheat="megacoins">💎 99.999 monedas</button>
         <button class="btn" data-cheat="badges">🏅 Todas las medallas</button>
@@ -216,6 +227,8 @@
   <script src="js/quests.js"></script>
   <script src="js/sfx.js"></script>
   <script src="js/speech.js"></script>
+  <script src="js/cloud-config.js" onerror="void 0"></script>
+  <script src="js/cloud.js"></script>
   <script src="js/engine.js"></script>
   <script src="js/world.js"></script>
   <script src="js/ui.js"></script>
