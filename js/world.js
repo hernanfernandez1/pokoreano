@@ -1793,40 +1793,36 @@ const World = (() => {
     window.addEventListener("keyup", e => { keys[e.key]=false; });
     document.getElementById("dialog").addEventListener("click", advanceDialog);
 
-    const padKey = { up:"ArrowUp", down:"ArrowDown", left:"ArrowLeft", right:"ArrowRight" };
-    document.querySelectorAll("[data-pad]").forEach(b => {
-      const k = padKey[b.dataset.pad];
-      const on  = e => { e.preventDefault(); if (Dialog.open){ advanceDialog(); return; } keys[k]=true; };
-      const off = e => { e.preventDefault(); keys[k]=false; };
-  const on = (e) => {
-  e.preventDefault();
-  if (Dialog.open) {
-    advanceDialog();
-    return;
-  }
-  keys[k] = true;
-};
 
-const off = (e) => {
-  e.preventDefault();
-  keys[k] = false;
-};
+const padKey = { up:"ArrowUp", down:"ArrowDown", left:"ArrowLeft", right:"ArrowRight" };
 
-b.addEventListener("pointerdown", on);
-b.addEventListener("pointerup", off);
-b.addEventListener("pointerleave", off);
-b.addEventListener("pointercancel", off);
+document.querySelectorAll("[data-pad]").forEach(b => {
+  const k = padKey[b.dataset.pad];
 
-// Compatibilidad iPad
-b.addEventListener("touchstart", on, { passive: false });
-b.addEventListener("touchend", off, { passive: false });
-b.addEventListener("touchcancel", off, { passive: false });
-    });
-    loop();
-    setInterval(() => { if (document.hidden) tick(); }, 50);
-    UI.refreshTopbar(); // ya con assets: avatar de Karol en la barra
-  }
+  const on = e => {
+    e.preventDefault();
+    if (Dialog.open){
+      advanceDialog();
+      return;
+    }
+    keys[k] = true;
+  };
 
+  const off = e => {
+    e.preventDefault();
+    keys[k] = false;
+  };
+
+  b.addEventListener("pointerdown", on);
+  b.addEventListener("pointerup", off);
+  b.addEventListener("pointerleave", off);
+  b.addEventListener("pointercancel", off);
+
+  // Compatibilidad iPad
+  b.addEventListener("touchstart", on, { passive: false });
+  b.addEventListener("touchend", off, { passive: false });
+  b.addEventListener("touchcancel", off, { passive: false });
+});
   // Frame del sprite de Karol como data-URL (row: 0=frente, 2=arriba) para UI de batalla/topbar
   function playerFrameURL(row=2){
     if (!ready || !imgs.kr) return null;
