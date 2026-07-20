@@ -1798,10 +1798,29 @@ const World = (() => {
       const k = padKey[b.dataset.pad];
       const on  = e => { e.preventDefault(); if (Dialog.open){ advanceDialog(); return; } keys[k]=true; };
       const off = e => { e.preventDefault(); keys[k]=false; };
-      b.addEventListener("pointerdown", on);
-      b.addEventListener("pointerup", off);
-      b.addEventListener("pointerleave", off);
-      b.addEventListener("pointercancel", off);
+  const on = (e) => {
+  e.preventDefault();
+  if (Dialog.open) {
+    advanceDialog();
+    return;
+  }
+  keys[k] = true;
+};
+
+const off = (e) => {
+  e.preventDefault();
+  keys[k] = false;
+};
+
+b.addEventListener("pointerdown", on);
+b.addEventListener("pointerup", off);
+b.addEventListener("pointerleave", off);
+b.addEventListener("pointercancel", off);
+
+// Compatibilidad iPad
+b.addEventListener("touchstart", on, { passive: false });
+b.addEventListener("touchend", off, { passive: false });
+b.addEventListener("touchcancel", off, { passive: false });
     });
     loop();
     setInterval(() => { if (document.hidden) tick(); }, 50);
