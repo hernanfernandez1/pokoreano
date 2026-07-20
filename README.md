@@ -84,7 +84,8 @@ La voz también está integrada en el juego:
   El **capítulo 7** de la historia incluye tu *Debut en el norebang* (sin micrófono,
   la DJ te deja "tararear" para no bloquear la historia).
 - **Duelo de pronunciación**: Rina (리나), tu rival, espera junto al norebang del
-  pueblo. 3 palabras por turnos: tú las pronuncias al micrófono y ella responde.
+  pueblo. Pantalla de duelo cara a cara (tú VS Rina) con marcador por rondas:
+  3 palabras por turnos, tú las pronuncias al micrófono y ella responde.
   Ganarle da +40 monedas y +5 XP.
 
 ## Importar vocabulario de tus libros
@@ -133,18 +134,20 @@ pestaña y en cada evento importante. Además, en el menú **🧪** tienes:
   4. Recarga el juego: los botones ☁ ya funcionan. Elige un código difícil de
      adivinar (cualquiera con tu código puede leer/escribir esa partida).
 
-## GitHub
+## Jugar en línea (GitHub Pages)
 
-El repo ya está inicializado con git. Para subirlo (una sola vez):
+El juego está publicado en:
 
-```
-gh auth login          # inicia sesión (flujo en el navegador)
-gh repo create pokoreano --private --source . --push
-```
+**https://hernanfernandez1.github.io/pokoreano/**
 
-**Importante**: mantenlo **privado** — los assets de Cute Fantasy (versión gratuita)
-no permiten redistribución pública. Para publicarlo (p.ej. GitHub Pages) compra la
-licencia del pack o reemplaza esos assets.
+Cada `git push` a `master` actualiza la página automáticamente (tarda ~1 minuto).
+El guardado es por navegador (localStorage): usa **Exportar/Importar partida** o la
+nube Supabase para llevar tu progreso entre la versión local y la de la página.
+
+**⚠️ Licencia de assets**: el repo es público y contiene los assets de Cute Fantasy
+(versión gratuita), cuya licencia **no permite redistribución**. Para estar en regla,
+compra la licencia del pack en [itch.io](https://kenmi-art.itch.io/cute-fantasy-rpg)
+o reemplaza esos assets por otros libres.
 
 ## Créditos de assets
 
