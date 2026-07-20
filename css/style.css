@@ -151,7 +151,17 @@ textarea.input, #import-text{
 .dpad [data-pad="down"]{grid-column:2;grid-row:2}
 .dpad [data-pad="right"]{grid-column:3;grid-row:2}
 @media (hover:hover) and (pointer:fine){ .dpad{opacity:.35} .dpad:hover{opacity:.9} }
+.dpad{
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
 
+.dpad button{
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+}
 /* ===== Captura de guardianes ===== */
 .capture-stage{
   flex:1;display:flex;flex-direction:column;gap:14px;
