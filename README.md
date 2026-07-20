@@ -107,32 +107,13 @@ pestaña y en cada evento importante. Además, en el menú **🧪** tienes:
 - **⬇ Exportar partida**: descarga un archivo `.json` con todo tu progreso
   (respaldo, o para llevarlo a otra PC/navegador).
 - **⬆ Importar partida**: restaura ese archivo.
-- **☁ Nube (Supabase)**: sube/baja tu partida con un código propio, desde cualquier
-  dispositivo. Para activarla (gratis, ~5 min):
-  1. Crea un proyecto en [supabase.com](https://supabase.com).
-  2. En *SQL Editor* ejecuta:
-     ```sql
-     create table saves (
-       code text primary key,
-       data jsonb not null,
-       updated_at timestamptz default now()
-     );
-     alter table saves enable row level security;
-     create policy "lectura publica" on saves for select using (true);
-     create policy "escritura publica" on saves for insert with check (true);
-     create policy "actualizacion publica" on saves for update using (true);
-     ```
-  3. Copia la **URL** del proyecto y la **anon key** (Settings → API) y crea
-     `js/cloud-config.js`:
-     ```js
-     const CLOUD_CONFIG = {
-       url: "https://TU-PROYECTO.supabase.co",
-       key: "TU_ANON_KEY",
-     };
-     ```
-     (Ese archivo está en `.gitignore`: tus claves no se suben a GitHub.)
-  4. Recarga el juego: los botones ☁ ya funcionan. Elige un código difícil de
-     adivinar (cualquiera con tu código puede leer/escribir esa partida).
+- **☁ Nube (Supabase)**: ya está conectada (`js/cloud-config.js`, proyecto propio
+  de Supabase con la clave *publishable*, que es pública por diseño — la seguridad
+  la dan las políticas RLS de la tabla `saves`). Escribe tu código de partida,
+  **☁⬆ Subir** en un dispositivo y **☁⬇ Bajar** en el otro. El código se recuerda
+  para la próxima vez. Elige un código difícil de adivinar: cualquiera que lo
+  conozca puede leer/escribir esa partida (no se pueden borrar: la tabla no tiene
+  política de DELETE).
 
 ## Jugar en línea (GitHub Pages)
 
