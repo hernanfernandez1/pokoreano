@@ -131,9 +131,23 @@ const Sfx = (() => {
   function musicPlaying(){ return !!musicTimer; }
 
   // la música arranca con el primer gesto del usuario (política de autoplay)
-  const kick = () => { startMusic(); window.removeEventListener("pointerdown", kick); window.removeEventListener("keydown", kick); };
-  window.addEventListener("pointerdown", kick);
-  window.addEventListener("keydown", kick);
+const kick = async () => {
+  const a = ac();
+  if (a && a.state === "suspended") {
+    await a.resume();
+  }
+  startMusic();
+
+  window.removeEventListener("pointerdown", kick);
+  window.removeEventListener("touchstart", kick);
+  window.removeEventListener("click", kick);
+  window.removeEventListener("keydown", kick);
+};
+
+window.addEventListener("pointerdown", kick, { once: true });
+window.addEventListener("touchstart", kick, { once: true });
+window.addEventListener("click", kick, { once: true });
+window.addEventListener("keydown", kick, { once: true });
 
   return { play, toggleMute, isMuted, startMusic, stopMusic, musicPlaying };
 })();
