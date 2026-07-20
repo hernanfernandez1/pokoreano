@@ -2,6 +2,3 @@
 Thumbs.db
 Desktop.ini
 .DS_Store
-
-# claves privadas de la nube (no subir nunca)
-js/cloud-config.js

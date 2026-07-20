@@ -91,6 +91,9 @@
     const el = document.getElementById("cloud-status");
     if (el){ el.textContent = msg; el.style.color = ok ? "var(--ok)" : "var(--bad)"; }
   };
+  const CODE_KEY = "pokoreano.cloudcode";
+  const codeInput = document.getElementById("cloud-code");
+  if (codeInput) codeInput.value = localStorage.getItem(CODE_KEY) || "";
   document.querySelectorAll("[data-save-action]").forEach(b => {
     b.addEventListener("click", async () => {
       const code = (document.getElementById("cloud-code")?.value || "").trim();
@@ -119,12 +122,14 @@
             State.save();
             cloudStatus("Subiendo…", true);
             await Cloud.push(code);
+            localStorage.setItem(CODE_KEY, code);
             cloudStatus(`Partida subida a la nube con el código "${code}" ✓`, true);
             break;
           case "cloud-down":
             if (!Cloud.available()){ cloudStatus("Nube no configurada — mira el README (Supabase, 5 min).", false); break; }
             cloudStatus("Bajando…", true);
             await Cloud.pull(code);
+            localStorage.setItem(CODE_KEY, code);
             cloudStatus("Partida restaurada ✓ recargando…", true);
             setTimeout(() => location.reload(), 900);
             break;
