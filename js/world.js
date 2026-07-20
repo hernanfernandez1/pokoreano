@@ -481,7 +481,9 @@ const World = (() => {
     for (let y=0;y<H;y++) for (let x=0;x<W;x++){
       if (x<2 || y<2 || x>=W-2 || y>=H-2) solid[y][x]=true;
     }
-    for (let x=0;x<W-1;x+=3){ if (x<15 || x>19) putTree(x,H-4); }
+    // árboles sur solo donde no pisen edificios (casa 4-9, plaza 13-21, norebang 24-29)
+    const treeBlocked = (x) => (x+3>=4 && x<=9) || (x+3>=13 && x<=21) || (x+3>=24 && x<=29);
+    for (let x=0;x<W-1;x+=3){ if (!treeBlocked(x)) putTree(x,H-4); }
     for (let y=2;y<H-4;y+=4){ putTree(0,y); putTree(W-4,y); }
 
     // calle principal (cruz) + plaza con fuente
@@ -511,8 +513,8 @@ const World = (() => {
     placeBuilding("house", 4, 3, "cafedoor", { cafe:true });
     // ACADEMIA (este) — casa con tinte frío
     placeBuilding("barn", 24, 3, "academiadoor", { academia:true });
-    // casa decorativa + NOREBANG (karaoke 노래방)
-    placeBuilding("house", 4, 15);
+    // casa de la abuela + NOREBANG (karaoke 노래방)
+    placeBuilding("house", 4, 15, "abuelacasadoor");
     placeBuilding("barn", 24, 15, "norebangdoor", { norebang:true });
 
     // NPCs del pueblo
@@ -644,6 +646,20 @@ const World = (() => {
     }, "norebang");
   }
   function enterNorebang(){ pushMap(); Sfx.play("door"); buildNorebang(); }
+
+  // ---------- Casa de la abuela (할머니 집) ----------
+  function buildAbuelaCasa(){
+    buildRoom(9, 8, {
+      key:"abuela_casa", name:"할머니 (Abuela)", dir:0, tint:"#c8a27a", hair:"gray", long:true,
+      wander:false, action:null, actionLabel:"✕ cerrar",
+      lines:[
+        { ko:"어서 와요, 우리 집에!", rom:"eoseo wayo, uri jibe!", es:"¡Bienvenida a mi casa!" },
+        { ko:"밥 먹었어요?", rom:"bap meogeosseoyo?", es:"¿Ya comiste? (saludo cariñoso coreano)" },
+        { ko:"공부 열심히 하세요~", rom:"gongbu yeolsimhi haseyo~", es:"Estudia con ganas~" },
+      ]
+    }, "abuelacasa");
+  }
+  function enterAbuelaCasa(){ pushMap(); Sfx.play("door"); buildAbuelaCasa(); }
 
   // ---------- Casa de Karol (집) ----------
   function buildHome(){
@@ -1413,6 +1429,8 @@ const World = (() => {
       enterPueblo();
     } else if (m.type==="alcaldiadoor"){
       enterAlcaldia();
+    } else if (m.type==="abuelacasadoor"){
+      enterAbuelaCasa();
     } else if (m.type==="cafedoor"){
       enterCafe();
     } else if (m.type==="academiadoor"){

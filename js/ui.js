@@ -625,88 +625,127 @@ const UI = (() => {
       .map(han => Data.allWords.find(w => w.han === han))
       .filter(Boolean);
     const pool = caught.length >= 3 ? caught : Data.allWords;
-    duel = { idx:0, me:0, rival:0, words: shuffle(pool.slice()).slice(0,3) };
-    $("#capture-sprite").innerHTML = `<div style="font-size:64px;line-height:110px;text-align:center">🎤⚡</div>`;
-    $("#capture-rarity").textContent = "⚔️ DUELO DE PRONUNCIACIÓN";
-    $("#capture-rarity").style.color = "#b14aed";
-    $("#capture-name").textContent = "리나";
-    $("#capture-sub").textContent = "Rina · tu rival";
-    showScreen("screen-capture");
+    duel = { idx:0, me:0, rival:0, rounds:[], words: shuffle(pool.slice()).slice(0,3) };
+    $("#duel-me-avatar").innerHTML = playerSpriteHTML(0);
+    duelBubble("me", "");
+    duelBubble("rival", "내 발음이 제일 좋아! 😏");
+    renderDuelBoard();
+    showScreen("screen-duel");
     nextDuelWord();
   }
-  function duelScore(){ return `TÚ ${duel.me} — ${duel.rival} RINA`; }
+  function duelBubble(who, text, talking){
+    const el = $(who === "me" ? "#duel-me-bubble" : "#duel-rival-bubble");
+    el.innerHTML = text || "&nbsp;";
+    el.classList.toggle("talking", !!talking);
+  }
+  function renderDuelBoard(){
+    $("#duel-score").textContent = `${duel.me} — ${duel.rival}`;
+    const dots = (who) => duel.words.map((_, i) => {
+      const r = duel.rounds[i];
+      const v = r ? r[who] : null;
+      const cls = v === true ? " hit" : (v === false ? " miss" : "");
+      const mark = v === true ? "✓" : (v === false ? "✗" : "");
+      return `<span class="duel-dot${cls}">${mark}</span>`;
+    }).join("");
+    $("#duel-me-dots").innerHTML = dots("me");
+    $("#duel-rival-dots").innerHTML = dots("rival");
+  }
   function nextDuelWord(){
     if (!duel) return;
     if (duel.idx >= duel.words.length) return finishDuel();
     const w = duel.words[duel.idx];
-    $("#capture-balls").innerHTML = "";
-    $("#capture-msg").textContent = `${duelScore()} · Palabra ${duel.idx+1} de ${duel.words.length}`;
-    $("#capture-question").innerHTML =
-      `<div class="han">${w.han}</div><div class="rom">${w.rom} · ${w.es}</div>`;
+    duel.rounds[duel.idx] = { me:null, rival:null };
+    renderDuelBoard();
+    $("#duel-round").textContent = `Palabra ${duel.idx+1} de ${duel.words.length}`;
+    $("#duel-han").textContent = w.han;
+    $("#duel-rom").textContent = `${w.rom} · ${w.es}`;
+    duelBubble("me", "Te toca a ti 🎤", true);
+    duelBubble("rival", "");
     Engine.speak(w.han);
-    const opts = $("#capture-options");
+    const opts = $("#duel-actions");
     opts.innerHTML = "";
     const hear = document.createElement("button");
     hear.className = "option";
-    hear.textContent = "🔊 Escuchar";
+    hear.textContent = "🔊 Escuchar otra vez";
     hear.onclick = () => Engine.speak(w.han);
     const go = document.createElement("button");
     go.className = "option mic-option";
-    go.textContent = "🎤 Tu turno";
-    go.onclick = () => duelTurn(go, w);
+    go.textContent = "🎤 ¡Mi turno!";
+    go.onclick = () => duelTurn(go, hear, w);
     opts.appendChild(hear); opts.appendChild(go);
   }
-  async function duelTurn(btn, w){
+  async function duelTurn(btn, hearBtn, w){
     if (!duel) return;
-    btn.disabled = true;
+    btn.disabled = true; hearBtn.disabled = true;
     btn.classList.add("listening");
     btn.textContent = "🎙️ Escuchando…";
-    $("#capture-msg").textContent = `Di: "${w.han}"`;
+    duelBubble("me", `Di: "${w.han}"`, true);
     const r = await Speech.listen();
     if (!duel) return;
     btn.classList.remove("listening");
+    const round = duel.rounds[duel.idx];
     const meHit = r.ok && Speech.matches(w.han, r.transcripts);
+    round.me = meHit;
     if (meHit){
       duel.me++;
       Sfx.play("ok");
       State.addXp(2); State.addTeamXp(1);
-      $("#capture-msg").textContent = `✅ ¡Perfecto! Ahora Rina…`;
+      duelBubble("me", "✅ ¡Perfecto! +2 XP", true);
     } else {
       const heard = r.transcripts && r.transcripts[0];
-      $("#capture-msg").textContent = heard
-        ? `❌ Escuché "${heard}"… Ahora Rina…`
-        : "❌ No te escuché… Ahora Rina…";
+      duelBubble("me", heard ? `❌ Escuché "${heard}"` : "❌ No te escuché 🙉", true);
       Sfx.play("bad");
     }
+    renderDuelBoard();
     // turno de Rina (dramático)
+    duelBubble("rival", "🎙️ Mi turno…", true);
     setTimeout(() => {
       if (!duel) return;
       const rivalHit = Math.random() < 0.6;
+      round.rival = rivalHit;
       if (rivalHit){ duel.rival++; Sfx.play("blip"); }
-      $("#capture-msg").textContent =
-        (rivalHit ? `Rina lo dijo perfecto 😤 · ` : `¡Rina se trabó! 😝 · `) + duelScore();
+      duelBubble("rival", rivalHit ? `«${w.han}» — perfecto 😤` : "…eh… ¡me trabé! 😝", true);
+      renderDuelBoard();
       duel.idx++;
-      setTimeout(nextDuelWord, 1300);
-    }, 1200);
+      setTimeout(nextDuelWord, 1600);
+    }, 1400);
   }
   function finishDuel(){
     const { me, rival } = duel;
     duel = null;
-    let msg;
+    let msg, color;
     if (me > rival){
       State.addCoins(40); State.addXp(5);
       Sfx.play("badge");
-      msg = `🏆 ¡Ganaste el duelo ${me}-${rival}! +40 monedas · +5 XP`;
+      msg = `🏆 ¡Ganaste ${me} — ${rival}! +40 monedas · +5 XP`;
+      color = "var(--ok)";
+      duelBubble("rival", "다음엔 내가 이길 거야… 😤");
+      duelBubble("me", "¡Victoria! 🎉", true);
     } else if (me === rival){
       State.addCoins(10);
       Sfx.play("coin");
-      msg = `🤝 Empate ${me}-${rival}. +10 monedas. ¡La próxima la vences!`;
+      msg = `🤝 Empate ${me} — ${rival} · +10 monedas`;
+      color = "var(--accent)";
+      duelBubble("rival", "¡La próxima te gano! 😏");
+      duelBubble("me", "Casi…", true);
     } else {
       Sfx.play("fail");
-      msg = `😤 Rina ganó ${rival}-${me}… ¡Practica en el Vocabudex y vuelve!`;
+      msg = `😤 Rina ganó ${rival} — ${me}… practica y vuelve`;
+      color = "var(--bad)";
+      duelBubble("rival", "역시 내가 최고야~ 😝");
+      duelBubble("me", "La próxima…", true);
     }
-    toast(msg, 3200);
-    renderMap(); showScreen("screen-map"); refreshTopbar();
+    $("#duel-round").textContent = "Resultado";
+    $("#duel-han").textContent = "";
+    $("#duel-rom").textContent = "";
+    const opts = $("#duel-actions");
+    opts.innerHTML = `<div class="duel-result" style="color:${color};width:100%">${msg}</div>`;
+    const back = document.createElement("button");
+    back.className = "option";
+    back.textContent = "Continuar ▶";
+    back.onclick = () => { renderMap(); showScreen("screen-map"); refreshTopbar(); };
+    opts.appendChild(back);
+    refreshTopbar();
   }
 
   // ---------- GUARDIANES (colección + equipo) ----------

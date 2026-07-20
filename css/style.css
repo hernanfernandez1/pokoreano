@@ -495,3 +495,65 @@ button.listening{
   .enemy-sprite,.player-sprite{width:130px;height:130px}
   .pokoreano-logo{font-size:38px}
 }
+
+/* ---------- Duelo de pronunciación (vs Rina) ---------- */
+.duel-stage{
+  max-width:640px;margin:0 auto;padding:18px 14px;
+  display:flex;flex-direction:column;gap:14px;min-height:100%;
+}
+.duel-header{
+  text-align:center;font-size:16px;font-weight:bold;color:var(--accent);
+  background:var(--panel);border:3px solid var(--border-dark);
+  border-radius:10px;padding:10px;
+}
+.duel-vs{display:flex;align-items:stretch;gap:10px}
+.duel-side{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;
+  background:var(--panel);border:3px solid var(--border-dark);
+  border-radius:12px;padding:12px 8px;
+}
+.duel-avatar{
+  width:84px;height:84px;display:flex;align-items:center;justify-content:center;
+  font-size:52px;background:var(--panel2);border-radius:50%;overflow:hidden;
+}
+.duel-avatar.rival{background:#3a1d5c}
+.duel-name{font-weight:bold;font-size:14px}
+.duel-dots{display:flex;gap:6px}
+.duel-dot{
+  width:16px;height:16px;border-radius:50%;
+  background:var(--panel2);border:2px solid var(--border-dark);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;line-height:1;color:#fff;
+}
+.duel-dot.hit{background:var(--ok)}
+.duel-dot.miss{background:var(--bad)}
+.duel-bubble{
+  min-height:34px;font-size:12px;color:var(--ink-dim);text-align:center;
+  background:#0f1226;border-radius:8px;padding:6px 8px;width:100%;
+  box-sizing:border-box;
+}
+.duel-bubble.talking{color:var(--ink)}
+.duel-mid{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  min-width:74px;
+}
+.duel-vs-label{
+  font-size:24px;font-weight:bold;color:var(--accent2);
+  text-shadow:2px 2px 0 #000;
+}
+.duel-score{font-size:18px;font-weight:bold;color:var(--accent)}
+.duel-word-card{
+  text-align:center;background:var(--panel);border:3px solid var(--border-dark);
+  border-radius:12px;padding:14px;
+}
+.duel-round{font-size:12px;color:var(--ink-dim);margin-bottom:6px}
+.duel-han{font-size:38px;font-weight:bold;margin:4px 0}
+.duel-rom{font-size:14px;color:var(--ink-dim)}
+.duel-actions{
+  display:flex;flex-wrap:wrap;gap:10px;justify-content:center;
+}
+.duel-actions .option{min-width:150px}
+.duel-result{
+  text-align:center;font-size:16px;font-weight:bold;padding:10px;
+  border-radius:10px;background:var(--panel2);
+}
