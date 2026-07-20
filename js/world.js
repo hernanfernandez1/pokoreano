@@ -1817,7 +1817,6 @@ document.querySelectorAll("[data-pad]").forEach(b => {
   b.addEventListener("pointerleave", off);
   b.addEventListener("pointercancel", off);
 
-  // Compatibilidad iPad
   b.addEventListener("touchstart", on, { passive: false });
   b.addEventListener("touchend", off, { passive: false });
   b.addEventListener("touchcancel", off, { passive: false });
