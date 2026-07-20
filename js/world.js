@@ -1793,22 +1793,21 @@ const World = (() => {
     window.addEventListener("keyup", e => { keys[e.key]=false; });
     document.getElementById("dialog").addEventListener("click", advanceDialog);
 
-
 const padKey = { up:"ArrowUp", down:"ArrowDown", left:"ArrowLeft", right:"ArrowRight" };
 
 document.querySelectorAll("[data-pad]").forEach(b => {
   const k = padKey[b.dataset.pad];
 
-  const on = e => {
+  const on = (e) => {
     e.preventDefault();
-    if (Dialog.open){
+    if (Dialog.open) {
       advanceDialog();
       return;
     }
     keys[k] = true;
   };
 
-  const off = e => {
+  const off = (e) => {
     e.preventDefault();
     keys[k] = false;
   };
