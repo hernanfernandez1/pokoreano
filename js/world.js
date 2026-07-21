@@ -220,20 +220,48 @@ const World = (() => {
       }
     });
 
-    // borde: la isla flota en el mar (anillo de agua alrededor de todo el mapa)
-    for (let y=0;y<MH;y++) for (let x=0;x<MW;x++){
-      if (x<2 || y<2 || x>=MW-2 || y>=MH-2){
-        solid[y][x]=true;
-        ground[y][x]="water";
-      }
+    // ---- ISLA ORGÁNICA: mar alrededor con costa ondulada y esquinas redondeadas ----
+    const seaTile = (x,y) => { if (solid[y]?.[x]!==undefined){ solid[y][x]=true; ground[y][x]="water"; } };
+    const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+    // zonas protegidas (nunca se inundan): puerta del pueblo (oeste) y muelle (sur)
+    const townZone = (x,y) => (x<=7 && y>=15 && y<=23);
+    const dockZone = (x,y) => (x>=21 && x<=27 && y>=52);
+    // sur: océano abierto
+    for (let y=62;y<MH;y++) for (let x=0;x<MW;x++) seaTile(x,y);
+    // profundidad de mar (ondulada) desde cada borde
+    const topSea   = (x) => 2 + clamp(Math.round(2 + 2*Math.sin(x*0.30) + 1.2*Math.sin(x*0.11+2)), 0, 5);
+    const leftSea  = (y) => 2 + clamp(Math.round(2 + 1.7*Math.sin(y*0.27)     + Math.sin(y*0.09)),   0, 4);
+    const rightSea = (y) => 2 + clamp(Math.round(2 + 1.7*Math.sin(y*0.31+1)   + Math.sin(y*0.10+2)), 0, 4);
+    for (let y=0;y<62;y++) for (let x=0;x<MW;x++){
+      if (x>=8 && x<=MW-9 && y>=8 && y<=53) continue;   // interior siempre tierra
+      if (townZone(x,y) || dockZone(x,y)) continue;
+      if (y < topSea(x) || x < leftSea(y) || x > MW-1-rightSea(y)) seaTile(x,y);
     }
-    for (let x=3;x<MW-4;x+=3) putTree(x,2);
-    for (let y=4;y<52;y+=3){ putTree(2,y); putTree(MW-4,y); }
+    // esquinas redondeadas (le quitan el aspecto rectangular)
+    const roundC = (cx,cy,r) => { for (let y=0;y<62;y++) for (let x=0;x<MW;x++){
+      if (townZone(x,y)||dockZone(x,y)) continue;
+      if (x>=8 && x<=MW-9 && y>=8 && y<=53) continue;
+      const dx=x-cx, dy=y-cy; if (dx*dx+dy*dy > r*r && ((cx<MW/2)?x<cx:x>cx) && ((cy<MH/2)?y<cy:y>cy)) seaTile(x,y);
+    }};
+    roundC(9,9,7); roundC(MW-10,9,7); roundC(9,58,7); roundC(MW-10,58,7);
 
-    // BIOMA COSTA (sur): mar abierto + playa ancha
-    for (let y=62;y<MH;y++) for (let x=0;x<MW;x++){ ground[y][x]="water"; solid[y][x]=true; }
+    // PLAYA: arena en la tierra que toca el mar del borde
+    const isSea = (x,y) => ground[y]?.[x]==="water";
+    for (let y=2;y<62;y++) for (let x=2;x<MW-2;x++){
+      if (solid[y][x] || ground[y][x]!=="grass") continue;
+      if (x>=10 && x<=MW-10 && y>=10 && y<=52) continue;  // solo cerca de la costa
+      if (isSea(x-1,y)||isSea(x+1,y)||isSea(x,y-1)||isSea(x,y+1)||
+          isSea(x-1,y-1)||isSea(x+1,y+1)||isSea(x-1,y+1)||isSea(x+1,y-1)) ground[y][x]="sand";
+    }
+    // playa ancha del sur (bioma costa)
     for (let y=54;y<62;y++) for (let x=2;x<MW-2;x++){
-      if (!solid[y][x] && ground[y][x]!=="water") ground[y][x]="sand";
+      if (!solid[y][x] && ground[y][x]==="grass") ground[y][x]="sand";
+    }
+    // árboles del borde, solo sobre tierra
+    for (let x=6;x<MW-6;x+=4){ for (const yy of [3,4,5]){ if (ground[yy]?.[x]==="grass" && !solid[yy][x]){ putTree(x,yy); break; } } }
+    for (let y=8;y<52;y+=5){
+      for (const xx of [3,4,5]){ if (ground[y]?.[xx]==="grass" && !solid[y][xx]){ putTree(xx,y); break; } }
+      for (const xx of [MW-5,MW-6,MW-7]){ if (ground[y]?.[xx]==="grass" && !solid[y][xx]){ putTree(xx,y); break; } }
     }
 
     // río (x 48-50) que baja hasta el mar
