@@ -1821,6 +1821,7 @@ document.querySelectorAll("[data-pad]").forEach(b => {
   b.addEventListener("touchend", off, { passive: false });
   b.addEventListener("touchcancel", off, { passive: false });
 });
+     loop();
   }
   // Frame del sprite de Karol como data-URL (row: 0=frente, 2=arriba) para UI de batalla/topbar
   function playerFrameURL(row=2){
