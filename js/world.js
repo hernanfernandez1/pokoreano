@@ -385,6 +385,35 @@ const World = (() => {
       }
     });
 
+    // BOSQUES: grupos densos de árboles (biomas este/noreste, como en la referencia)
+    const canTree = (x,y) => {
+      if (y+2>=MH || x+1>=MW) return false;
+      for (let dy=0;dy<3;dy++) for (let dx=0;dx<2;dx++){
+        const g = ground[y+dy]?.[x+dx];
+        if (g===undefined || g!=="grass") return false;
+        if (solid[y+dy][x+dx] || meta[y+dy]?.[x+dx] || decor[y+dy]?.[x+dx]) return false;
+      }
+      return true;
+    };
+    const forest = (cx, cy, n) => {
+      let placed=0, tries=0;
+      while (placed<n && tries<n*8){
+        tries++;
+        const x = cx + (Math.random()*10-5|0), y = cy + (Math.random()*8-4|0);
+        if (canTree(x,y)){ putTree(x,y); placed++; }
+      }
+    };
+    forest(60, 20, 10); forest(80, 30, 9); forest(58, 40, 8);  // bosque este
+    forest(22, 12, 7);  forest(40, 42, 7); forest(84, 44, 8);  // manchones
+    // más flores dispersas por la pradera (vida y color)
+    for (let i=0;i<120;i++){
+      const x=4+(Math.random()*(MW-8)|0), y=4+(Math.random()*54|0);
+      if (ground[y]?.[x]==="grass" && !solid[y][x] && !meta[y]?.[x] && !decor[y]?.[x]){
+        const r=Math.random();
+        ground[y][x] = r<0.4?"flower":r<0.7?"flower2":r<0.9?"flower3":"tuft";
+      }
+    }
+
     spawnButterflies();
     spawnClouds();
     mode = "over";
