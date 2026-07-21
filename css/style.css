@@ -150,7 +150,9 @@ textarea.input, #import-text{
 .dpad [data-pad="left"]{grid-column:1;grid-row:2}
 .dpad [data-pad="down"]{grid-column:2;grid-row:2}
 .dpad [data-pad="right"]{grid-column:3;grid-row:2}
-@media (hover:hover) and (pointer:fine){ .dpad{opacity:.35} .dpad:hover{opacity:.9} }
+/* en PC (mouse) no se muestra; en pantallas táctiles sí (.touch la fuerza por JS) */
+@media (hover:hover) and (pointer:fine){ .dpad{display:none} }
+.dpad.touch{display:grid}
 .dpad{
     touch-action: none;
     -webkit-user-select: none;
@@ -164,7 +166,7 @@ textarea.input, #import-text{
   -webkit-user-select: none;
 }
 .dpad button{
-    touch-action: manipulation;
+    touch-action: none;
     -webkit-tap-highlight-color: transparent;
 }
 

@@ -61,8 +61,9 @@ const World = (() => {
     caveWallFace2:{ i:"cv", x:2, y:2 },
     caveRock: { i:"cv", x:8, y:4 },
     // interior
-    floorA:   { i:"in", x:1, y:3 }, floorB:{ i:"in", x:2, y:3 },
-    floorC:   { i:"in", x:1, y:4 }, floorD:{ i:"in", x:2, y:4 },
+    // piso de madera de las casas (assets/gfx/floor_b.png, del B.png de Karol)
+    floorA:   { i:"fb", x:0, y:0 }, floorB:{ i:"fb", x:1, y:0 },
+    floorC:   { i:"fb", x:0, y:1 }, floorD:{ i:"fb", x:1, y:1 },
     wallTop:  { i:"in", x:4, y:0 },
     wallFace: { i:"in", x:6, y:0 },
     wallFace2:{ i:"in", x:6, y:1 },
@@ -999,7 +1000,7 @@ const World = (() => {
   }
   async function loadAssets(){
     const CF = "assets/gfx/cute";
-    const [ow, inn, cv, ch, np, kr,
+    const [ow, inn, cv, ch, np, kr, fb,
            kaWalkW, kaWalkE, kaRunW, kaRunE,
            cfGrass, cfWater, cfWaterM, cfPath, cfPathM, cfBeach,
            cfOak, cfHouse, cfBridge, cfFence, cfDecor, cfChest,
@@ -1010,6 +1011,7 @@ const World = (() => {
       loadImg("assets/gfx/character.png"),
       loadImg("assets/gfx/NPC_test.png"),
       loadImg("assets/gfx/karol4.png"),
+      loadImg("assets/gfx/floor_b.png"),
       loadImg("assets/gfx/karol_anim/walk_w.png"),
       loadImg("assets/gfx/karol_anim/walk_e.png"),
       loadImg("assets/gfx/karol_anim/run_w.png"),
@@ -1032,7 +1034,7 @@ const World = (() => {
       loadImg(CF+"/Animals/Sheep/Sheep.png"),
     ]);
     imgs = {
-      ow, "in": inn, cv, ch, np, kr,
+      ow, "in": inn, cv, ch, np, kr, fb,
       kaWalkW, kaWalkE, kaRunW, kaRunE,
       cfg: cfGrass, cfw: cfWater, cfwm: cfWaterM,
       cfp: cfPath, cfpm: cfPathM, cfb: cfBeach,
@@ -1820,9 +1822,14 @@ document.querySelectorAll("[data-pad]").forEach(b => {
   // Eventos para PC/Ratón
   b.addEventListener("mousedown", on);
   b.addEventListener("mouseup", off);
-  b.addEventListener("mouseleave", off); 
+  b.addEventListener("mouseleave", off);
 });
-     loop();
+// si el dispositivo tiene pantalla táctil, mostrar el D-pad siempre
+if (navigator.maxTouchPoints > 0 || "ontouchstart" in window)
+  document.getElementById("dpad")?.classList.add("touch");
+    loop();
+    setInterval(() => { if (document.hidden) tick(); }, 50);
+    UI.refreshTopbar(); // ya con assets: avatar de Karol en la barra
   }
   // Frame del sprite de Karol como data-URL (row: 0=frente, 2=arriba) para UI de batalla/topbar
   function playerFrameURL(row=2){
