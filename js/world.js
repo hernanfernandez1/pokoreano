@@ -102,7 +102,7 @@ const World = (() => {
   let mapStack = [];
   let bushFx = null; // sacudida del arbusto al aparecer un guardián
 
-  const OW = { W:96, H:72 };
+  const OW = { W:132, H:104 };
 
   const gymHouses = [
     { key:"hangul",     x: 10, y: 8,  sprite:"house" },  // pradera NO
@@ -198,6 +198,10 @@ const World = (() => {
   // ---------- Build overworld ----------
   function buildOverworld(){
     MW = OW.W; MH = OW.H;
+    // referencias del sur relativas a la altura (para poder agrandar el mapa)
+    const OCEAN_Y = MH-10;   // primeras filas de océano abierto al sur
+    const BEACH_Y = MH-18;   // inicio de la playa sur
+    const DOCK_Y0 = MH-13, DOCK_Y1 = MH-6;   // muelle
     ground=[]; solid=[]; meta=[]; decor=[];
     for (let y=0;y<MH;y++){
       ground[y]=[]; solid[y]=[]; meta[y]=[]; decor[y]=[];
@@ -224,48 +228,49 @@ const World = (() => {
     const seaTile = (x,y) => { if (solid[y]?.[x]!==undefined){ solid[y][x]=true; ground[y][x]="water"; } };
     const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
     // zonas protegidas (nunca se inundan): puerta del pueblo (oeste) y muelle (sur)
+    const INLAND_Y = MH-19;   // hasta aquí la costa sur no toca el interior
     const townZone = (x,y) => (x<=7 && y>=15 && y<=23);
-    const dockZone = (x,y) => (x>=21 && x<=27 && y>=52);
+    const dockZone = (x,y) => (x>=21 && x<=27 && y>=BEACH_Y-2);
     // sur: océano abierto
-    for (let y=62;y<MH;y++) for (let x=0;x<MW;x++) seaTile(x,y);
+    for (let y=OCEAN_Y;y<MH;y++) for (let x=0;x<MW;x++) seaTile(x,y);
     // profundidad de mar (ondulada) desde cada borde
     const topSea   = (x) => 2 + clamp(Math.round(2 + 2*Math.sin(x*0.30) + 1.2*Math.sin(x*0.11+2)), 0, 5);
     const leftSea  = (y) => 2 + clamp(Math.round(2 + 1.7*Math.sin(y*0.27)     + Math.sin(y*0.09)),   0, 4);
     const rightSea = (y) => 2 + clamp(Math.round(2 + 1.7*Math.sin(y*0.31+1)   + Math.sin(y*0.10+2)), 0, 4);
-    for (let y=0;y<62;y++) for (let x=0;x<MW;x++){
-      if (x>=8 && x<=MW-9 && y>=8 && y<=53) continue;   // interior siempre tierra
+    for (let y=0;y<OCEAN_Y;y++) for (let x=0;x<MW;x++){
+      if (x>=8 && x<=MW-9 && y>=8 && y<=INLAND_Y) continue;   // interior siempre tierra
       if (townZone(x,y) || dockZone(x,y)) continue;
       if (y < topSea(x) || x < leftSea(y) || x > MW-1-rightSea(y)) seaTile(x,y);
     }
     // esquinas redondeadas (le quitan el aspecto rectangular)
-    const roundC = (cx,cy,r) => { for (let y=0;y<62;y++) for (let x=0;x<MW;x++){
+    const roundC = (cx,cy,r) => { for (let y=0;y<OCEAN_Y;y++) for (let x=0;x<MW;x++){
       if (townZone(x,y)||dockZone(x,y)) continue;
-      if (x>=8 && x<=MW-9 && y>=8 && y<=53) continue;
+      if (x>=8 && x<=MW-9 && y>=8 && y<=INLAND_Y) continue;
       const dx=x-cx, dy=y-cy; if (dx*dx+dy*dy > r*r && ((cx<MW/2)?x<cx:x>cx) && ((cy<MH/2)?y<cy:y>cy)) seaTile(x,y);
     }};
-    roundC(9,9,7); roundC(MW-10,9,7); roundC(9,58,7); roundC(MW-10,58,7);
+    roundC(9,9,7); roundC(MW-10,9,7); roundC(9,OCEAN_Y-4,7); roundC(MW-10,OCEAN_Y-4,7);
 
     // PLAYA: arena en la tierra que toca el mar del borde
     const isSea = (x,y) => ground[y]?.[x]==="water";
-    for (let y=2;y<62;y++) for (let x=2;x<MW-2;x++){
+    for (let y=2;y<OCEAN_Y;y++) for (let x=2;x<MW-2;x++){
       if (solid[y][x] || ground[y][x]!=="grass") continue;
-      if (x>=10 && x<=MW-10 && y>=10 && y<=52) continue;  // solo cerca de la costa
+      if (x>=10 && x<=MW-10 && y>=10 && y<=BEACH_Y-2) continue;  // solo cerca de la costa
       if (isSea(x-1,y)||isSea(x+1,y)||isSea(x,y-1)||isSea(x,y+1)||
           isSea(x-1,y-1)||isSea(x+1,y+1)||isSea(x-1,y+1)||isSea(x+1,y-1)) ground[y][x]="sand";
     }
     // playa ancha del sur (bioma costa)
-    for (let y=54;y<62;y++) for (let x=2;x<MW-2;x++){
+    for (let y=BEACH_Y;y<OCEAN_Y;y++) for (let x=2;x<MW-2;x++){
       if (!solid[y][x] && ground[y][x]==="grass") ground[y][x]="sand";
     }
     // árboles del borde, solo sobre tierra
     for (let x=6;x<MW-6;x+=4){ for (const yy of [3,4,5]){ if (ground[yy]?.[x]==="grass" && !solid[yy][x]){ putTree(x,yy); break; } } }
-    for (let y=8;y<52;y+=5){
+    for (let y=8;y<OCEAN_Y-6;y+=5){
       for (const xx of [3,4,5]){ if (ground[y]?.[xx]==="grass" && !solid[y][xx]){ putTree(xx,y); break; } }
       for (const xx of [MW-5,MW-6,MW-7]){ if (ground[y]?.[xx]==="grass" && !solid[y][xx]){ putTree(xx,y); break; } }
     }
 
     // río (x 48-50) que baja hasta el mar
-    for (let y=2;y<62;y++) for (let x=48;x<51;x++){ ground[y][x]="water"; solid[y][x]=true; }
+    for (let y=2;y<OCEAN_Y;y++) for (let x=48;x<51;x++){ ground[y][x]="water"; solid[y][x]=true; }
 
     // lago de la pradera
     for (let y=28;y<34;y++) for (let x=14;x<21;x++){ ground[y][x]="water"; solid[y][x]=true; }
@@ -273,8 +278,9 @@ const World = (() => {
     // caminos de tierra anchos (2 tiles, estilo Sunnyside)
     const pathH = (y) => { for (let x=2;x<MW-2;x++){ if (!solid[y][x]) ground[y][x]="path"; if (!solid[y+1][x]) ground[y+1][x]="path"; } };
     const pathV = (x,y0,y1) => { for (let y=y0;y<y1;y++){ if (!solid[y][x]) ground[y][x]="path"; if (!solid[y][x+1]) ground[y][x+1]="path"; } };
-    pathH(20); pathH(46);
-    pathV(30,2,54); pathV(62,2,54);
+    pathH(20); pathH(46); pathH(MH-24);                    // + camino este-oeste al sur
+    pathV(30,2,OCEAN_Y-4); pathV(62,2,OCEAN_Y-4);          // rutas verticales hasta el sur
+    pathV(96,18,MH-22); pathV(MW-16,10,MH-22);             // + rutas nuevas al este
     // puentes de madera sobre el río (E-O, 3 tiles de alto: rail/tabla/rail)
     [20, 46].forEach(cy => {
       for (let x=48;x<=50;x++){
@@ -331,11 +337,11 @@ const World = (() => {
     [4,5].forEach(x => { solid[19][x]=false; meta[19][x]={type:"pueblodoor"}; });
 
     // MUELLE DE PESCA (puente vertical hacia el mar, 3 tiles de ancho)
-    for (let y=59;y<=66;y++){
+    for (let y=DOCK_Y0;y<=DOCK_Y1;y++){
       ground[y][23]="pierL"; ground[y][24]="pierM"; ground[y][25]="pierR";
       [23,24,25].forEach(x => { solid[y][x]=false; meta[y][x]=null; });
     }
-    meta[66][24] = { type:"fishspot" };
+    meta[DOCK_Y1][24] = { type:"fishspot" };
 
     // CORRAL del granjero (cerca con animales)
     for (let x=42;x<=48;x++){ ground[9][x] = x===42?"fenceTL":(x===48?"fenceTR":"fenceH"); solid[9][x]=true; }
@@ -360,9 +366,12 @@ const World = (() => {
       ground[y][x] = (g==="sand") ? "bushSand" : "bush";
       meta[y][x]={type:"bush",biome};
     };
-    for (let i=0;i<26;i++) tryBush("pradera", 4+(Math.random()*44|0), 4+(Math.random()*46|0));
-    for (let i=0;i<20;i++) tryBush("bosque", 54+(Math.random()*38|0), 3+(Math.random()*30|0));
-    for (let i=0;i<18;i++) tryBush("costa", 3+(Math.random()*90|0), 54+(Math.random()*8|0));
+    for (let i=0;i<28;i++) tryBush("pradera", 4+(Math.random()*44|0), 4+(Math.random()*46|0));
+    for (let i=0;i<24;i++) tryBush("bosque", 54+(Math.random()*46|0), 3+(Math.random()*40|0));
+    for (let i=0;i<22;i++) tryBush("costa", 3+(Math.random()*(MW-6)|0), BEACH_Y+(Math.random()*7|0));
+    // zonas nuevas (este y sur)
+    for (let i=0;i<26;i++) tryBush("pradera", 96+(Math.random()*(MW-102)|0), 10+(Math.random()*(MH-30)|0));
+    for (let i=0;i<24;i++) tryBush("pradera", 8+(Math.random()*(MW-16)|0), 56+(Math.random()*(MH-74)|0));
 
     npcsCur = npcsOver;
     npcsCur.forEach(n => { solid[n.y][n.x]=true; meta[n.y][n.x]={type:"npc",npc:n}; });
@@ -378,6 +387,11 @@ const World = (() => {
       { x:54, y:34, w:6, h:4, pool: Data.routes[1].pool },  // centro-este
       { x:8,  y:44, w:7, h:3, pool: Data.routes[5].pool },  // SO
       { x:76, y:14, w:6, h:4, pool: Data.routes[3].pool },  // claro de la cueva
+      { x:104, y:30, w:7, h:5, pool: Data.routes[2].pool }, // este nuevo
+      { x:116, y:48, w:6, h:4, pool: Data.routes[3].pool }, // este-sur nuevo
+      { x:40, y:64, w:8, h:4, pool: Data.routes[4].pool },  // sur nuevo
+      { x:70, y:74, w:7, h:5, pool: Data.routes[1].pool },  // sur nuevo 2
+      { x:24, y:78, w:7, h:4, pool: Data.routes[5].pool },  // suroeste nuevo
     ];
     grassPatches.forEach(p => {
       for (let y=p.y;y<p.y+p.h;y++) for (let x=p.x;x<p.x+p.w;x++){
@@ -405,9 +419,12 @@ const World = (() => {
     };
     forest(60, 20, 10); forest(80, 30, 9); forest(58, 40, 8);  // bosque este
     forest(22, 12, 7);  forest(40, 42, 7); forest(84, 44, 8);  // manchones
-    // más flores dispersas por la pradera (vida y color)
-    for (let i=0;i<120;i++){
-      const x=4+(Math.random()*(MW-8)|0), y=4+(Math.random()*54|0);
+    forest(108, 24, 10); forest(118, 40, 9); forest(100, 52, 8); // bosque nuevo (este)
+    forest(30, 66, 9);  forest(60, 70, 10); forest(90, 68, 9);   // bosque nuevo (sur)
+    forest(44, 78, 8);  forest(76, 80, 8);
+    // más flores dispersas por todo el mapa (vida y color)
+    for (let i=0;i<220;i++){
+      const x=4+(Math.random()*(MW-8)|0), y=4+(Math.random()*(MH-14)|0);
       if (ground[y]?.[x]==="grass" && !solid[y][x] && !meta[y]?.[x] && !decor[y]?.[x]){
         const r=Math.random();
         ground[y][x] = r<0.4?"flower":r<0.7?"flower2":r<0.9?"flower3":"tuft";
