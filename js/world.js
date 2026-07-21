@@ -1808,39 +1808,62 @@ const World = (() => {
     });
     window.addEventListener("keyup", e => { keys[e.key]=false; });
     document.getElementById("dialog").addEventListener("click", advanceDialog);
-const padKey = { up:"ArrowUp", down:"ArrowDown", left:"ArrowLeft", right:"ArrowRight" };
-
-document.querySelectorAll("[data-pad]").forEach(b => {
-  const k = padKey[b.dataset.pad];
-
-  const on = (e) => {
-    // Es vital revisar si es cancelable para que no arroje errores en consola
-    if (e.cancelable) e.preventDefault(); 
-    if (Dialog.open) {
-      advanceDialog();
-      return;
-    }
-    keys[k] = true;
+// ---------- Joystick táctil flotante ----------
+// Tocas en cualquier parte del mapa y aparece un joystick bajo el dedo:
+// arrastra para caminar (empuja lejos para correr), suelta para parar.
+(() => {
+  const wrap = document.getElementById("map-wrap");
+  const joyEl = document.getElementById("joystick");
+  const knob = document.getElementById("joy-knob");
+  if (!wrap || !joyEl) return;
+  let origin = null, touchId = null;
+  const DIRS = ["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"];
+  const clearDirs = () => { DIRS.forEach(k => keys[k]=false); keys["Shift"]=false; };
+  const applyVec = (dx,dy) => {
+    clearDirs();
+    const mag = Math.hypot(dx,dy);
+    if (mag < 12) return;                       // zona muerta
+    if (Math.abs(dx) > Math.abs(dy)) keys[dx>0?"ArrowRight":"ArrowLeft"]=true;
+    else keys[dy>0?"ArrowDown":"ArrowUp"]=true;
+    keys["Shift"] = mag > 46;                   // empujar lejos = correr
   };
-
-  const off = (e) => {
+  const start = (e) => {
+    if (e.target.closest("button, .dialog, .topbar")) return;
+    const t = e.changedTouches[0];
     if (e.cancelable) e.preventDefault();
-    keys[k] = false;
+    if (Dialog.open){ advanceDialog(); return; }
+    touchId = t.identifier;
+    const r = wrap.getBoundingClientRect();
+    origin = { x:t.clientX, y:t.clientY };
+    joyEl.style.left = (t.clientX - r.left) + "px";
+    joyEl.style.top  = (t.clientY - r.top) + "px";
+    knob.style.transform = "translate(-50%,-50%)";
+    joyEl.hidden = false;
   };
-
-  // Eventos para móvil/táctil
-  b.addEventListener("touchstart", on, { passive: false });
-  b.addEventListener("touchend", off, { passive: false });
-  b.addEventListener("touchcancel", off, { passive: false });
-
-  // Eventos para PC/Ratón
-  b.addEventListener("mousedown", on);
-  b.addEventListener("mouseup", off);
-  b.addEventListener("mouseleave", off);
-});
-// si el dispositivo tiene pantalla táctil, mostrar el D-pad siempre
-if (navigator.maxTouchPoints > 0 || "ontouchstart" in window)
-  document.getElementById("dpad")?.classList.add("touch");
+  const move = (e) => {
+    if (origin === null) return;
+    const t = [...e.changedTouches].find(t => t.identifier === touchId);
+    if (!t) return;
+    if (e.cancelable) e.preventDefault();
+    const dx = t.clientX - origin.x, dy = t.clientY - origin.y;
+    // el pomo sigue al dedo (limitado al radio de la base)
+    const mag = Math.hypot(dx,dy), max = 44;
+    const f = mag > max ? max/mag : 1;
+    knob.style.transform = `translate(calc(-50% + ${dx*f}px), calc(-50% + ${dy*f}px))`;
+    applyVec(dx,dy);
+  };
+  const end = (e) => {
+    if (origin === null) return;
+    if (![...e.changedTouches].some(t => t.identifier === touchId)) return;
+    origin = null; touchId = null;
+    joyEl.hidden = true;
+    clearDirs();
+  };
+  wrap.addEventListener("touchstart", start, { passive:false });
+  wrap.addEventListener("touchmove", move, { passive:false });
+  wrap.addEventListener("touchend", end, { passive:false });
+  wrap.addEventListener("touchcancel", end, { passive:false });
+})();
     loop();
     setInterval(() => { if (document.hidden) tick(); }, 50);
     UI.refreshTopbar(); // ya con assets: avatar de Karol en la barra

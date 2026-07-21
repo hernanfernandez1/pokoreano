@@ -34,13 +34,14 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);
 }
 body{
   min-height:100vh;
+  min-height:100dvh;
   background:
     radial-gradient(1200px 600px at 50% -10%, #2a1050 0%, transparent 60%),
     linear-gradient(180deg,#0d0f1a 0%,#050612 100%);
 }
 
 /* Screens */
-#app{width:100vw;height:100vh;position:relative;overflow:hidden}
+#app{width:100vw;height:100vh;height:100dvh;position:relative;overflow:hidden}
 .screen{
   position:absolute;inset:0;
   display:none;
@@ -153,6 +154,25 @@ textarea.input, #import-text{
 /* en PC (mouse) no se muestra; en pantallas táctiles sí (.touch la fuerza por JS) */
 @media (hover:hover) and (pointer:fine){ .dpad{display:none} }
 .dpad.touch{display:grid}
+
+/* ===== Joystick táctil flotante (aparece donde tocas) ===== */
+.joystick{
+  position:absolute;width:120px;height:120px;
+  pointer-events:none;z-index:30;
+  transform:translate(-50%,-50%);
+}
+.joy-base{
+  position:absolute;inset:0;border-radius:50%;
+  background:rgba(31,36,64,.45);
+  border:3px solid rgba(255,255,255,.35);
+}
+.joy-knob{
+  position:absolute;left:50%;top:50%;width:52px;height:52px;
+  border-radius:50%;transform:translate(-50%,-50%);
+  background:rgba(255,209,102,.85);
+  border:3px solid rgba(10,12,24,.7);
+  box-shadow:0 2px 8px rgba(0,0,0,.4);
+}
 .dpad{
     touch-action: none;
     -webkit-user-select: none;
