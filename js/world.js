@@ -83,16 +83,13 @@ const World = (() => {
     exitMat:  { i:"in", x:5, y:6 },
   };
   const DECOR = {
-    // árboles Sunnyside animados (strip de 4 frames, px reales fw x fh)
-    tree:   { i:"ssTree1", strip:4, fw:32, fh:34, w:2, h:3 },
-    tree2:  { i:"ssTree2", strip:4, fw:28, fh:43, w:2, h:3 },
-    windmill:{ i:"ssWindmill", strip:9, fw:112, fh:112, w:7, h:7 }, // molino animado
-    // casas Sunnyside (48x64, 3 ancho x 4 alto, puerta abajo-centro)
-    house:  { i:"ssHouseBlue",   x:0, y:0, w:3, h:4 },
-    barn:   { i:"ssHouseGreen",  x:0, y:0, w:3, h:4 },
-    houseG: { i:"ssHouseOrange", x:0, y:0, w:3, h:4 },
-    houseR: { i:"ssHouseRed",    x:0, y:0, w:3, h:4 },
-    houseP: { i:"ssHousePurple", x:0, y:0, w:3, h:4 },
+    // árboles Sunnyside (arte lindo, quietos: se dibuja solo el primer frame)
+    tree:   { i:"ssTree1", still:true, fw:32, fh:34, w:2, h:3 },
+    tree2:  { i:"ssTree2", still:true, fw:28, fh:43, w:2, h:3 },
+    // casas Cute Fantasy (las de antes: 6x8, base filas 4-7, puerta x+2,y+7)
+    house:  { i:"cfh",  x:0, y:0, w:6, h:8 },   // casa azul
+    barn:   { i:"cfhB", x:0, y:0, w:6, h:8 },   // casa tinte frío (gimnasios "barn")
+    houseG: { i:"cfhG", x:0, y:0, w:6, h:8 },   // casa tinte cálido (tienda/alcaldía)
     lamp:   { i:"cfd",  x:4, y:4, w:1, h:3 },   // farol
     caveDoor: { i:"ow", x:4, y:31, w:4, h:2 },  // arco de piedra
     fountain: { i:"ow", x:22, y:9, w:3, h:3 },  // fuente de la plaza (3x3)
@@ -108,13 +105,13 @@ const World = (() => {
   const OW = { W:96, H:72 };
 
   const gymHouses = [
-    { key:"hangul",     x: 10, y: 8,  sprite:"house"   },  // pradera NO (azul)
-    { key:"numeros",    x: 34, y: 6,  sprite:"barn"    },  // pradera N (verde)
-    { key:"particulas", x: 66, y: 12, sprite:"houseR"  },  // bosque O (rojo)
-    { key:"verbos",     x: 84, y: 22, sprite:"houseP"  },  // bosque profundo (violeta)
-    { key:"honor",      x: 72, y: 48, sprite:"houseG"  },  // SE (naranja)
-    { key:"topik1",     x: 34, y: 50, sprite:"barn"    },  // costa (verde)
-    { key:"topik2",     x: 10, y: 36, sprite:"houseR"  },  // pradera O (rojo)
+    { key:"hangul",     x: 10, y: 8,  sprite:"house" },  // pradera NO
+    { key:"numeros",    x: 34, y: 6,  sprite:"barn"  },  // pradera N
+    { key:"particulas", x: 66, y: 12, sprite:"house" },  // bosque O
+    { key:"verbos",     x: 84, y: 22, sprite:"barn"  },  // bosque profundo
+    { key:"honor",      x: 72, y: 48, sprite:"house" },  // SE, cerca de la costa
+    { key:"topik1",     x: 34, y: 50, sprite:"barn"  },  // costa (puerta a la playa)
+    { key:"topik2",     x: 10, y: 36, sprite:"house" },  // pradera O
     // "maestro" vive dentro de la cueva (bioma bosque, NE)
   ];
 
@@ -386,16 +383,16 @@ const World = (() => {
       }
     }
   }
-  // Casa Sunnyside 3x4: base solida = filas 2-3, puerta abajo al centro (x+1)
+  // Casa Cute Fantasy 6x8: base solida = filas 4-7, puerta abajo al centro (x+2)
   function putHouse(g){
     const x=g.x, y=g.y;
-    clearTreesRect(x-3, y-3, x+5, y+6);
+    clearTreesRect(x-4, y-5, x+7, y+9);
     decor[y][x] = { sprite:g.sprite, gym:g.key };
-    for (let dy=2;dy<4;dy++) for (let dx=0;dx<3;dx++){
+    for (let dy=4;dy<8;dy++) for (let dx=0;dx<6;dx++){
       if (solid[y+dy] === undefined || solid[y+dy][x+dx] === undefined) continue;
       solid[y+dy][x+dx]=true; meta[y+dy][x+dx]=null;
     }
-    const doorX=x+1, doorY=y+3;
+    const doorX=x+2, doorY=y+7;
     solid[doorY][doorX]=false;
     meta[doorY][doorX]={type:"gymdoor", key:g.key};
     if (doorY+1 < MH){
@@ -422,14 +419,14 @@ const World = (() => {
 
   // ---------- Tienda ----------
   function putBuilding(x, y, sprite, doorType, tag){
-    clearTreesRect(x-3, y-3, x+5, y+6);
+    clearTreesRect(x-4, y-5, x+7, y+9);
     const d = { sprite }; if (tag) d[tag]=true;
     decor[y][x] = d;
-    for (let dy=2;dy<4;dy++) for (let dx=0;dx<3;dx++){
+    for (let dy=4;dy<8;dy++) for (let dx=0;dx<6;dx++){
       if (solid[y+dy] === undefined || solid[y+dy][x+dx] === undefined) continue;
       solid[y+dy][x+dx]=true; meta[y+dy][x+dx]=null;
     }
-    const doorX=x+1, doorY=y+3;
+    const doorX=x+2, doorY=y+7;
     solid[doorY][doorX]=false;
     meta[doorY][doorX]={type:doorType};
     if (doorY+1 < MH){
@@ -522,27 +519,27 @@ const World = (() => {
     decor[10][21] = { sprite:"lamp" };  solid[12][21]=true;
 
     const placeBuilding = (spr, x, y, doorType, extra) => {
-      clearTreesRect(x-2, y-2, x+4, y+5);
+      clearTreesRect(x-2, y-2, x+7, y+9);
       decor[y][x] = Object.assign({ sprite:spr }, extra||{});
-      for (let dy=2;dy<4;dy++) for (let dx=0;dx<3;dx++){
+      for (let dy=4;dy<8;dy++) for (let dx=0;dx<6;dx++){
         if (solid[y+dy]?.[x+dx] === undefined) continue;
         solid[y+dy][x+dx]=true; meta[y+dy][x+dx]=null;
       }
       if (doorType){
-        solid[y+3][x+1]=false; meta[y+3][x+1]={type:doorType};
-        if (y+4<H){ solid[y+4][x+1]=false; ground[y+4][x+1]="path"; meta[y+4][x+1]=null; }
+        solid[y+7][x+2]=false; meta[y+7][x+2]={type:doorType};
+        if (y+8<H){ solid[y+8][x+2]=false; ground[y+8][x+2]="path"; meta[y+8][x+2]=null; }
       }
     };
 
-    // ALCALDÍA (norte centro) — techo naranja
-    placeBuilding("houseG", 15, 1, "alcaldiadoor", { alcaldia:true });
-    // CAFÉ (oeste) — techo rojo
-    placeBuilding("houseR", 5, 4, "cafedoor", { cafe:true });
-    // ACADEMIA (este) — techo verde
-    placeBuilding("barn", 25, 4, "academiadoor", { academia:true });
-    // casa de la abuela (azul) + NOREBANG (karaoke, violeta)
-    placeBuilding("house", 5, 16, "abuelacasadoor");
-    placeBuilding("houseP", 25, 16, "norebangdoor", { norebang:true });
+    // ALCALDÍA (norte centro) — casa cálida
+    placeBuilding("houseG", 14, 0, "alcaldiadoor", { alcaldia:true });
+    // CAFÉ (oeste) — casa azul
+    placeBuilding("house", 4, 3, "cafedoor", { cafe:true });
+    // ACADEMIA (este) — casa con tinte frío
+    placeBuilding("barn", 24, 3, "academiadoor", { academia:true });
+    // casa de la abuela + NOREBANG (karaoke 노래방)
+    placeBuilding("house", 4, 15, "abuelacasadoor");
+    placeBuilding("barn", 24, 15, "norebangdoor", { norebang:true });
 
     // NPCs del pueblo
     const npcs = [];
@@ -1656,9 +1653,9 @@ const World = (() => {
     sprites.forEach(s => {
       if (s.kind==="decor"){
         const def = s.def;
-        if (def.strip){
-          // tira animada (fw x fh px por frame), apoyada al fondo de su caja w x h
-          const fr = (((Date.now()/260)|0) + s.x*3 + s.y) % def.strip;
+        if (def.strip || def.still){
+          // sprite de tira (fw x fh px por frame), apoyado al fondo de su caja w x h
+          const fr = def.still ? 0 : ((((Date.now()/260)|0) + s.x*3 + s.y) % def.strip);
           ctx.drawImage(imgs[def.i],
             fr*def.fw, 0, def.fw, def.fh,
             Math.round(s.x*TILE*SCALE-camX),
