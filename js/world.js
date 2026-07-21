@@ -9,34 +9,46 @@ const World = (() => {
 
   // ---------- Tile atlas (img: "ow" overworld / "in" interior) ----------
   const TILES = {
-    // --- Cute Fantasy (Kenmi) ---
-    grass:    { i:"cfg", x:0, y:0 },
+    // --- Sunnyside World (Daniel Diggle) — hoja ss de 64 columnas ---
+    grass:    { i:"ss", x:1, y:1 },
+    grassB:   { i:"ss", x:2, y:2 },              // variantes con puntitos
+    grassC:   { i:"ss", x:3, y:2 },
     tallgrass:{ i:"tg", x:0,  y:0,  base:true },  // hierba alta procedural estilo pokemon
-    flower:   { i:"cfd", x:0, y:1,  base:true },  // flores blancas
-    flower2:  { i:"cfd", x:0, y:8,  base:true },  // flores rojas
-    flower3:  { i:"cfd", x:1, y:8,  base:true },  // flores amarillas
-    tuft:     { i:"cfd", x:1, y:0,  base:true },  // matitas
+    flower:   { i:"ss", x:4, y:2 },
+    flower2:  { i:"ss", x:5, y:2 },
+    flower3:  { i:"ss", x:6, y:2 },
+    tuft:     { i:"ss", x:2, y:2 },
     mush:     { i:"cfd", x:2, y:7,  base:true },  // seta
     rock:     { i:"cfd", x:1, y:2,  base:true },  // roca
     chest:    { i:"cfch", x:0, y:0, base:true },  // cofre coleccionable
-    // agua: blob 3x3 (0,0)-(2,2) + centro profundo
-    water:    { i:"cfwm", x:0, y:0 },
-    waterT:   { i:"cfw", x:1, y:0 }, waterB:{ i:"cfw", x:1, y:2 },
-    waterL:   { i:"cfw", x:0, y:1 }, waterR:{ i:"cfw", x:2, y:1 },
-    waterTL:  { i:"cfw", x:0, y:0 }, waterTR:{ i:"cfw", x:2, y:0 },
-    waterBL:  { i:"cfw", x:0, y:2 }, waterBR:{ i:"cfw", x:2, y:2 },
-    // arena/tierra de playa: blob FarmLand 3x3
-    sand:     { i:"cfb", x:1, y:1 },
-    sandT:    { i:"cfb", x:1, y:0, base:true }, sandB:{ i:"cfb", x:1, y:2, base:true },
-    sandL:    { i:"cfb", x:0, y:1, base:true }, sandR:{ i:"cfb", x:2, y:1, base:true },
-    sandTL:   { i:"cfb", x:0, y:0, base:true }, sandTR:{ i:"cfb", x:2, y:0, base:true },
-    sandBL:   { i:"cfb", x:0, y:2, base:true }, sandBR:{ i:"cfb", x:2, y:2, base:true },
-    // camino: blob Path 3x3 + centro
-    path:     { i:"cfpm", x:0, y:0 },
-    pathT:    { i:"cfp", x:1, y:0, base:true }, pathB:{ i:"cfp", x:1, y:2, base:true },
-    pathL:    { i:"cfp", x:0, y:1, base:true }, pathR:{ i:"cfp", x:2, y:1, base:true },
-    pathTL:   { i:"cfp", x:0, y:0, base:true }, pathTR:{ i:"cfp", x:2, y:0, base:true },
-    pathBL:   { i:"cfp", x:0, y:2, base:true }, pathBR:{ i:"cfp", x:2, y:2, base:true },
+    // mar Sunnyside: patrón 4x4 en (11-14,18-21), dibujado por drawSea
+    water:    { sea:true },
+    waterT:   { sea:true }, waterB:{ sea:true },
+    waterL:   { sea:true }, waterR:{ sea:true },
+    waterTL:  { sea:true }, waterTR:{ sea:true },
+    waterBL:  { sea:true }, waterBR:{ sea:true },
+    // borde de isla (autotile "Land"): pasto serrado sobre el mar
+    landN:  { i:"ss", x:4, y:3, baseWater:true },
+    landS:  { i:"ss", x:5, y:4, baseWater:true },
+    landW:  { i:"ss", x:6, y:3, baseWater:true },
+    landE:  { i:"ss", x:2, y:4, baseWater:true },
+    landNW: { i:"ss", x:8, y:3, baseWater:true },
+    landNE: { i:"ss", x:4, y:4, baseWater:true },
+    landSW: { i:"ss", x:6, y:4, baseWater:true },
+    landSE: { i:"ss", x:7, y:4, baseWater:true },
+    // arena de playa Sunnyside
+    sand:     { i:"ss", x:5, y:1 },
+    sandP1:   { i:"ss", x:7, y:1 }, sandP2:{ i:"ss", x:8, y:1 }, sandP3:{ i:"ss", x:9, y:1 },
+    sandT:    { i:"ss", x:5, y:1 }, sandB:{ i:"ss", x:5, y:1 },
+    sandL:    { i:"ss", x:5, y:1 }, sandR:{ i:"ss", x:5, y:1 },
+    sandTL:   { i:"ss", x:5, y:1 }, sandTR:{ i:"ss", x:5, y:1 },
+    sandBL:   { i:"ss", x:5, y:1 }, sandBR:{ i:"ss", x:5, y:1 },
+    // camino de tierra ancho (Path 02 de Sunnyside): relleno pleno + cuñas de pasto en esquinas
+    path:     { i:"ss", x:12, y:7, base:true },
+    pathT:    { i:"ss", x:12, y:7, base:true }, pathB:{ i:"ss", x:12, y:7, base:true },
+    pathL:    { i:"ss", x:12, y:7, base:true }, pathR:{ i:"ss", x:12, y:7, base:true },
+    pathTL:   { i:"ss", x:13, y:7, base:true }, pathTR:{ i:"ss", x:14, y:7, base:true },
+    pathBL:   { i:"ss", x:12, y:8, base:true }, pathBR:{ i:"ss", x:16, y:7, base:true },
     // muelle vertical (N-S): sección sólida rail|tabla|rail, se repite a lo largo
     pierL: { i:"bvL", x:0, y:0, baseWater:true },
     pierM: { i:"bvM", x:0, y:0, baseWater:true },
@@ -71,7 +83,10 @@ const World = (() => {
     exitMat:  { i:"in", x:5, y:6 },
   };
   const DECOR = {
-    tree:   { i:"oak",  x:0, y:0, w:4, h:5 },   // roble Cute Fantasy (64x80)
+    // árboles Sunnyside animados (strip de 4 frames, px reales fw x fh)
+    tree:   { i:"ssTree1", strip:4, fw:32, fh:34, w:2, h:3 },
+    tree2:  { i:"ssTree2", strip:4, fw:28, fh:43, w:2, h:3 },
+    windmill:{ i:"ssWindmill", strip:9, fw:112, fh:112, w:7, h:7 }, // molino animado
     house:  { i:"cfh",  x:0, y:0, w:6, h:8 },   // casa azul (96x128)
     barn:   { i:"cfhB", x:0, y:0, w:6, h:8 },   // casa tinte frío
     houseG: { i:"cfhG", x:0, y:0, w:6, h:8 },   // casa tinte cálido (tienda)
@@ -85,6 +100,7 @@ const World = (() => {
   // ---------- Maps (con pila: overworld → cueva → interior) ----------
   let MW, MH, ground, solid, meta, decor, npcsCur, mode = "over";
   let mapStack = [];
+  let bushFx = null; // sacudida del arbusto al aparecer un guardián
 
   const OW = { W:96, H:72 };
 
@@ -204,12 +220,15 @@ const World = (() => {
       }
     });
 
-    // borde: muro sólido + anillo de árboles (el mar cierra el sur)
+    // borde: la isla flota en el mar (anillo de agua alrededor de todo el mapa)
     for (let y=0;y<MH;y++) for (let x=0;x<MW;x++){
-      if (x<2 || y<2 || x>=MW-2 || y>=MH-2) solid[y][x]=true;
+      if (x<2 || y<2 || x>=MW-2 || y>=MH-2){
+        solid[y][x]=true;
+        ground[y][x]="water";
+      }
     }
-    for (let x=0;x<MW-1;x+=3) putTree(x,0);
-    for (let y=3;y<52;y+=3){ putTree(0,y); putTree(MW-2,y); }
+    for (let x=3;x<MW-4;x+=3) putTree(x,2);
+    for (let y=4;y<52;y+=3){ putTree(2,y); putTree(MW-4,y); }
 
     // BIOMA COSTA (sur): mar abierto + playa ancha
     for (let y=62;y<MH;y++) for (let x=0;x<MW;x++){ ground[y][x]="water"; solid[y][x]=true; }
@@ -223,7 +242,7 @@ const World = (() => {
     // lago de la pradera
     for (let y=28;y<34;y++) for (let x=14;x<21;x++){ ground[y][x]="water"; solid[y][x]=true; }
 
-    // caminos (blob autotile)
+    // caminos de tierra anchos (2 tiles, estilo Sunnyside)
     const pathH = (y) => { for (let x=2;x<MW-2;x++){ if (!solid[y][x]) ground[y][x]="path"; if (!solid[y+1][x]) ground[y+1][x]="path"; } };
     const pathV = (x,y0,y1) => { for (let y=y0;y<y1;y++){ if (!solid[y][x]) ground[y][x]="path"; if (!solid[y][x+1]) ground[y][x+1]="path"; } };
     pathH(20); pathH(46);
@@ -339,24 +358,27 @@ const World = (() => {
     });
 
     spawnButterflies();
+
+    // (el molino se arma con piezas del tileset en la fase de edificios)
     mode = "over";
   }
 
   function putTree(x,y){
-    if (y+1>=MH || x+1>=MW) return;
-    decor[y][x] = { sprite:"tree" };
-    // roble 4x5: sólo el tronco bloquea (2x2 abajo al centro)
-    for (let dy=2;dy<5;dy++) for (let dx=1;dx<3;dx++){
-      if (solid[y+dy]?.[x+dx] !== undefined) solid[y+dy][x+dx]=true;
+    if (y+2>=MH || x+1>=MW) return;
+    // árbol Sunnyside animado (2 tiles de ancho, copa mece con el viento)
+    decor[y][x] = { sprite: ((x*7+y*11)%3===0) ? "tree2" : "tree" };
+    for (let dx=0;dx<2;dx++){
+      if (solid[y+2]?.[x+dx] !== undefined) solid[y+2][x+dx]=true;
     }
   }
 
   function clearTreesRect(x0,y0,x1,y1){
     for (let dy=y0;dy<=y1;dy++) for (let dx=x0;dx<=x1;dx++){
-      if (decor[dy]?.[dx]?.sprite === "tree"){
+      const spr = decor[dy]?.[dx]?.sprite;
+      if (spr === "tree" || spr === "tree2"){
         decor[dy][dx] = null;
-        for (let ty=2;ty<5;ty++) for (let tx=1;tx<3;tx++){
-          if (solid[dy+ty]?.[dx+tx] !== undefined) solid[dy+ty][dx+tx]=false;
+        for (let tx=0;tx<2;tx++){
+          if (solid[dy+2]?.[dx+tx] !== undefined) solid[dy+2][dx+tx]=false;
         }
       }
     }
@@ -1018,6 +1040,7 @@ const World = (() => {
   async function loadAssets(){
     const CF = "assets/gfx/cute";
     const [ow, inn, cv, ch, np, kr, fb,
+           ss, ssTree1, ssTree2, ssBush, ssWindmill, ssSmoke,
            kaWalkW, kaWalkE, kaRunW, kaRunE,
            cfGrass, cfWater, cfWaterM, cfPath, cfPathM, cfBeach,
            cfOak, cfHouse, cfBridge, cfFence, cfDecor, cfChest,
@@ -1029,6 +1052,12 @@ const World = (() => {
       loadImg("assets/gfx/NPC_test.png"),
       loadImg("assets/gfx/karol4.png"),
       loadImg("assets/gfx/floor_b.png"),
+      loadImg("assets/gfx/ss/tileset.png"),
+      loadImg("assets/gfx/ss/tree1.png"),
+      loadImg("assets/gfx/ss/tree2.png"),
+      loadImg("assets/gfx/ss/bush_shake.png"),
+      loadImg("assets/gfx/ss/windmill.png"),
+      loadImg("assets/gfx/ss/smoke.png"),
       loadImg("assets/gfx/karol_anim/walk_w.png"),
       loadImg("assets/gfx/karol_anim/walk_e.png"),
       loadImg("assets/gfx/karol_anim/run_w.png"),
@@ -1052,6 +1081,7 @@ const World = (() => {
     ]);
     imgs = {
       ow, "in": inn, cv, ch, np, kr, fb,
+      ss, ssTree1, ssTree2, ssBush, ssWindmill, ssSmoke,
       kaWalkW, kaWalkE, kaRunW, kaRunE,
       cfg: cfGrass, cfw: cfWater, cfwm: cfWaterM,
       cfp: cfPath, cfpm: cfPathM, cfb: cfBeach,
@@ -1413,7 +1443,7 @@ const World = (() => {
   }
 
   function tryMove(dx,dy,dir){
-    if (player.moving || Dialog.open) return;
+    if (player.moving || Dialog.open || bushFx) return;
     player.dir = dir;
     const nx=player.x+dx, ny=player.y+dy;
     if (nx<0||ny<0||nx>=MW||ny>=MH) return;
@@ -1439,7 +1469,11 @@ const World = (() => {
     } else if (m.type==="bush"){
       // arbustos estilo pokemon: aquí viven los guardianes
       if (Math.random() < 0.35){
-        UI.startCaptureFromWorld(m.biome);
+        // sacudida del arbusto (Arbusto 1.gif de Karol) antes de la captura
+        bushFx = { x: player.x, y: player.y, t0: Date.now() };
+        Sfx.play("encounter");
+        const biome = m.biome;
+        setTimeout(() => { bushFx = null; UI.startCaptureFromWorld(biome); }, 950);
       }
     } else if (m.type==="cavedoor"){
       enterCave();
@@ -1604,6 +1638,15 @@ const World = (() => {
     sprites.forEach(s => {
       if (s.kind==="decor"){
         const def = s.def;
+        if (def.strip){
+          // tira animada (fw x fh px por frame), apoyada al fondo de su caja w x h
+          const fr = (((Date.now()/260)|0) + s.x*3 + s.y) % def.strip;
+          ctx.drawImage(imgs[def.i],
+            fr*def.fw, 0, def.fw, def.fh,
+            Math.round(s.x*TILE*SCALE-camX),
+            Math.round((s.y*TILE + def.h*TILE - def.fh)*SCALE-camY),
+            def.fw*SCALE, def.fh*SCALE);
+        } else
         ctx.drawImage(imgs[def.i],
           def.x*TILE, def.y*TILE, def.w*TILE, def.h*TILE,
           Math.round(s.x*TILE*SCALE-camX), Math.round(s.y*TILE*SCALE-camY),
@@ -1660,6 +1703,14 @@ const World = (() => {
 
     drawAnimals(camX, camY);
     drawButterflies(camX, camY);
+
+    // sacudida del arbusto (13 frames del GIF de Karol, ~950ms)
+    if (bushFx && imgs.ssBush){
+      const fr = Math.min(12, ((Date.now()-bushFx.t0)/73)|0);
+      ctx.drawImage(imgs.ssBush, fr*48, 0, 48, 48,
+        Math.round(bushFx.x*TILE*SCALE-camX), Math.round(bushFx.y*TILE*SCALE-camY),
+        TILE*SCALE, TILE*SCALE);
+    }
   }
 
   function drawBubble(n, camX, camY){
@@ -1711,14 +1762,22 @@ const World = (() => {
   // auto-tiling: elige la variante con borde según los vecinos
   const WATERISH = n => n===undefined || n==="water" || (typeof n==="string" && (n.indexOf("bri")===0 || n.indexOf("pier")===0));
   function autoTileName(name, x, y){
-    if (name === "water"){
-      const like = (xx,yy) => WATERISH(ground[yy]?.[xx]);
-      const N=like(x,y-1), S=like(x,y+1), W=like(x-1,y), E=like(x+1,y);
-      if (!N) return !W ? "waterTL" : (!E ? "waterTR" : "waterT");
-      if (!S) return !W ? "waterBL" : (!E ? "waterBR" : "waterB");
-      if (!W) return "waterL";
-      if (!E) return "waterR";
-      return "water";
+    if (name === "water") return "water"; // el mar es siempre el patrón; el borde lo pone el pasto
+    if (["grass","grassB","grassC","flower","flower2","flower3","tuft","mush","rock"].includes(name)){
+      // pasto junto al agua → borde de isla (autotile Land de Sunnyside)
+      const WAT = (xx,yy) => { const g = ground[yy]?.[xx]; return g !== undefined && WATERISH(g); };
+      const N=WAT(x,y-1), S=WAT(x,y+1), W=WAT(x-1,y), E=WAT(x+1,y);
+      if (N||S||W||E){
+        if (N&&W) return "landNW"; if (N&&E) return "landNE";
+        if (S&&W) return "landSW"; if (S&&E) return "landSE";
+        if (N) return "landN"; if (S) return "landS"; if (W) return "landW"; return "landE";
+      }
+      if (name === "grass"){
+        const h = (x*31 + y*17) % 23;       // variantes determinísticas
+        if (h === 3) return "grassB";
+        if (h === 11) return "grassC";
+      }
+      return name;
     }
     if (name === "sand"){
       const like = (xx,yy) => { const g = ground[yy]?.[xx]; return g===undefined || g==="sand" || g==="bushSand" || g==="path" || WATERISH(g); };
@@ -1727,23 +1786,43 @@ const World = (() => {
       if (!S) return !W ? "sandBL" : (!E ? "sandBR" : "sandB");
       if (!W) return "sandL";
       if (!E) return "sandR";
+      const h = (x*13 + y*7) % 9;           // piedritas sueltas
+      if (h === 2) return "sandP1";
+      if (h === 5) return "sandP2";
+      if (h === 7) return "sandP3";
       return "sand";
     }
     if (name === "path"){
       const like = (xx,yy) => { const g = ground[yy]?.[xx]; return g===undefined || g==="path" || g==="sand" || WATERISH(g); };
       const N=like(x,y-1), S=like(x,y+1), W=like(x-1,y), E=like(x+1,y);
-      if (!N) return !W ? "pathTL" : (!E ? "pathTR" : "pathT");
-      if (!S) return !W ? "pathBL" : (!E ? "pathBR" : "pathB");
-      if (!W) return "pathL";
-      if (!E) return "pathR";
+      if (!N && !W) return "pathTL";
+      if (!N && !E) return "pathTR";
+      if (!S && !W) return "pathBL";
+      if (!S && !E) return "pathBR";
       return "path";
     }
     return name;
   }
 
+  // mar Sunnyside: bloque 4x4 en (11-14,18-21) repetido + destellos animados (11-14,22)
+  const ISLAND = (g) => g !== undefined && g !== "water" && !(typeof g === "string" && (g.indexOf("bri")===0 || g.indexOf("pier")===0));
+  function drawSea(x, y, dx, dy){
+    ctx.drawImage(imgs.ss, (11+(x&3))*TILE, (18+(y&3))*TILE, TILE, TILE, dx, dy, TILE*SCALE, TILE*SCALE);
+    // sombra de orilla: mar tocando tierra se oscurece (da profundidad a la costa)
+    const cerca = ISLAND(ground[y-1]?.[x]) || ISLAND(ground[y+1]?.[x]) || ISLAND(ground[y]?.[x-1]) || ISLAND(ground[y]?.[x+1]);
+    if (cerca && ground[y]?.[x] === "water"){
+      ctx.fillStyle = "rgba(16,60,90,0.35)";
+      ctx.fillRect(dx, dy, TILE*SCALE, TILE*SCALE);
+    }
+    if ((x*7 + y*13) % 9 === 0){
+      const fr = (((Date.now()/220)|0) + x + y) % 4;
+      ctx.drawImage(imgs.ss, (11+fr)*TILE, 22*TILE, TILE, TILE, dx, dy, TILE*SCALE, TILE*SCALE);
+    }
+  }
   function drawTile(name, x, y, camX, camY){
     const t = TILES[autoTileName(name, x, y)] || TILES.grass;
     const dx=Math.round(x*TILE*SCALE-camX), dy=Math.round(y*TILE*SCALE-camY);
+    if (t.sea){ drawSea(x, y, dx, dy); return; }
     // def.hi = hoja en alta resolución (48px por tile, se dibuja 1:1 sin pixelar)
     const blit = (def) => {
       const ts = def.hi ? TILE*SCALE : TILE;
@@ -1751,7 +1830,7 @@ const World = (() => {
     };
     if (t.base) blit(TILES.grass);
     else if (t.baseSand) blit(TILES.sand);
-    else if (t.baseWater) blit(TILES.water);
+    else if (t.baseWater) drawSea(x, y, dx, dy);
     else if (t.baseFloor) blit(TILES.floorA);
     blit(t);
   }
@@ -1899,5 +1978,11 @@ const World = (() => {
     return true;
   }
 
-  return { start, debug, playerFrameURL, tp };
+  // debug: buscar tiles por nombre de ground (para pruebas)
+  function findGround(name){
+    const out = [];
+    for (let y=0;y<MH;y++) for (let x=0;x<MW;x++) if (ground[y][x]===name) out.push([x,y]);
+    return out;
+  }
+  return { start, debug, playerFrameURL, tp, findGround };
 })();

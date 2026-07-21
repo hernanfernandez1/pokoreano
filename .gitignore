@@ -2,3 +2,8 @@
 Thumbs.db
 Desktop.ini
 .DS_Store
+
+# packs originales de Sunnyside (pesados; al juego solo van los extractos en assets/gfx/ss)
+assets/Sunnyside_World_ARCHIVED_ASSETS/
+assets/Sunnyside_World_ASSET_PACK_V2.1/
+assets/*.aseprite
