@@ -1792,14 +1792,14 @@ const World = (() => {
     });
     window.addEventListener("keyup", e => { keys[e.key]=false; });
     document.getElementById("dialog").addEventListener("click", advanceDialog);
-
 const padKey = { up:"ArrowUp", down:"ArrowDown", left:"ArrowLeft", right:"ArrowRight" };
 
 document.querySelectorAll("[data-pad]").forEach(b => {
   const k = padKey[b.dataset.pad];
 
   const on = (e) => {
-    e.preventDefault();
+    // Es vital revisar si es cancelable para que no arroje errores en consola
+    if (e.cancelable) e.preventDefault(); 
     if (Dialog.open) {
       advanceDialog();
       return;
@@ -1808,18 +1808,19 @@ document.querySelectorAll("[data-pad]").forEach(b => {
   };
 
   const off = (e) => {
-    e.preventDefault();
+    if (e.cancelable) e.preventDefault();
     keys[k] = false;
   };
 
-  b.addEventListener("pointerdown", on);
-  b.addEventListener("pointerup", off);
-  b.addEventListener("pointerleave", off);
-  b.addEventListener("pointercancel", off);
-
+  // Eventos para móvil/táctil
   b.addEventListener("touchstart", on, { passive: false });
   b.addEventListener("touchend", off, { passive: false });
   b.addEventListener("touchcancel", off, { passive: false });
+
+  // Eventos para PC/Ratón
+  b.addEventListener("mousedown", on);
+  b.addEventListener("mouseup", off);
+  b.addEventListener("mouseleave", off); 
 });
      loop();
   }
