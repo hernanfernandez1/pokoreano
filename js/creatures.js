@@ -277,22 +277,27 @@ const Creatures = (() => {
   function byBiome(biome){ return CREATURES.filter(c=>c.biome===biome); }
 
   // roll a creature for a bush in the given biome (null = nothing)
-  function roll(biome){
+  // rare=true (arbusto que se sacudía): sesga fuerte hacia rarezas altas
+  function roll(biome, rare){
     const pool = byBiome(biome);
     if (!pool.length) return null;
+    // pesos: normal usa los de RARITY; "rare" favorece epic/legend/rare
+    const w = rare
+      ? { legend:0.12, epic:0.33, rare:0.45, common:0.10 }
+      : { legend:RARITY.legend.weight, epic:RARITY.epic.weight, rare:RARITY.rare.weight, common:RARITY.common.weight };
     const r = Math.random();
     let acc = 0;
-    // order legend→common so rare rolls win first
     const order = ["legend","epic","rare","common"];
     for (const rar of order){
-      acc += RARITY[rar].weight;
+      acc += w[rar];
       if (r < acc){
         const cands = pool.filter(c=>c.rarity===rar);
         if (cands.length) return cands[Math.random()*cands.length|0];
       }
     }
-    const commons = pool.filter(c=>c.rarity==="common");
-    return commons[Math.random()*commons.length|0] || pool[0];
+    // respaldo: la rareza más alta disponible en el bioma
+    for (const rar of order){ const c = pool.filter(x=>x.rarity===rar); if (c.length) return c[Math.random()*c.length|0]; }
+    return pool[0];
   }
 
   // ---------- XP / niveles ----------

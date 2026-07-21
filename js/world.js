@@ -347,10 +347,22 @@ const World = (() => {
     for (let x=42;x<=48;x++){ ground[9][x] = x===42?"fenceTL":(x===48?"fenceTR":"fenceH"); solid[9][x]=true; }
     for (let x=42;x<=48;x++){ if (x===45) continue; ground[14][x] = x===42?"fenceBL":(x===48?"fenceBR":"fenceH"); solid[14][x]=true; }
     for (let y=10;y<14;y++){ ground[y][42]="fenceV"; solid[y][42]=true; ground[y][48]="fenceV"; solid[y][48]=true; }
+
+    // ALDEA DE GRANJAS (sur nuevo): casas decorativas, parcelas y corral con animales
+    const villY = MH-30;
+    putDecoHouse(38, villY, "houseG");
+    putDecoHouse(50, villY+2, "house");
+    putDecoHouse(44, villY+12, "barn");
+    putFarmPlot(58, villY+4, 6, 4);
+    putFarmPlot(34, villY+14, 5, 4);
+    // corral sur
+    const cy0=villY+7, cx0=60;
+    for (let x=cx0;x<=cx0+6;x++){ ground[cy0][x]="fenceH"; solid[cy0][x]=true; ground[cy0+4][x]= x===cx0+3?"grass":"fenceH"; if(x!==cx0+3) solid[cy0+4][x]=true; }
+    for (let y=cy0+1;y<cy0+4;y++){ ground[y][cx0]="fenceV"; solid[y][cx0]=true; ground[y][cx0+6]="fenceV"; solid[y][cx0+6]=true; }
     spawnAnimals();
 
     // COFRES escondidos (monedas)
-    [[6,6,"c1"],[90,50,"c2"],[68,32,"c3"],[8,58,"c4"],[90,8,"c5"]].forEach(([x,y,id]) => {
+    [[6,6,"c1"],[90,50,"c2"],[68,32,"c3"],[8,58,"c4"],[90,8,"c5"],[118,60,"c6"],[46,88,"c7"]].forEach(([x,y,id]) => {
       if (solid[y]?.[x] || meta[y]?.[x] || decor[y]?.[x]) return;
       const s = State.get();
       if ((s.chests||[]).includes(id)) return;
@@ -359,12 +371,15 @@ const World = (() => {
     });
 
     // ARBUSTOS de guardianes por bioma (aleatorios en zonas válidas)
+    // "hot" = tiene un guardián raro dentro: se sacude solo en el mapa para avisar
+    const HOT_CHANCE = { pradera:0.15, costa:0.20, bosque:0.30, cueva:0.40 };
     const tryBush = (biome,x,y) => {
       if (solid[y]?.[x] || meta[y]?.[x] || decor[y]?.[x]) return;
       const g = ground[y][x];
       if (!["grass","sand","flower","flower2","flower3","tuft"].includes(g)) return;
       ground[y][x] = (g==="sand") ? "bushSand" : "bush";
-      meta[y][x]={type:"bush",biome};
+      const hot = Math.random() < (HOT_CHANCE[biome] || 0.15);
+      meta[y][x]={type:"bush",biome,hot};
     };
     for (let i=0;i<28;i++) tryBush("pradera", 4+(Math.random()*44|0), 4+(Math.random()*46|0));
     for (let i=0;i<24;i++) tryBush("bosque", 54+(Math.random()*46|0), 3+(Math.random()*40|0));
@@ -510,6 +525,25 @@ const World = (() => {
   }
   function putShop(x,y){ putBuilding(x, y, "houseG", "shopdoor", "shop"); }
   function putHome(x,y){ putBuilding(x, y, "house", "casadoor", "casa"); }
+
+  // casa decorativa (no se entra): solo ambienta la aldea
+  function putDecoHouse(x, y, sprite){
+    if (y+8>=MH || x+6>=MW) return;
+    clearTreesRect(x-2, y-2, x+7, y+9);
+    decor[y][x] = { sprite };
+    for (let dy=4;dy<8;dy++) for (let dx=0;dx<6;dx++){
+      if (solid[y+dy]?.[x+dx] === undefined) continue;
+      solid[y+dy][x+dx]=true; meta[y+dy][x+dx]=null;
+      if (ground[y+dy][x+dx]!=="water") ground[y+dy][x+dx]="grass";
+    }
+  }
+  // parcela de cultivo (tierra arada simulada con camino + cercado)
+  function putFarmPlot(x, y, w, h){
+    for (let dy=0;dy<h;dy++) for (let dx=0;dx<w;dx++){
+      if (solid[y+dy]?.[x+dx]===undefined || solid[y+dy][x+dx]) continue;
+      ground[y+dy][x+dx] = "sand"; // parche de tierra clara
+    }
+  }
 
   function buildShopInterior(){
     const W=11, H=8;
@@ -1227,6 +1261,10 @@ const World = (() => {
     put("sheep", 18, 26, 3); put("chicken", 26, 36, 3); put("cow", 12, 22, 3);
     // patos junto al lago de la pradera
     put("duck", 22, 27, 2); put("duck", 19, 33, 2);
+    // aldea de granjas del sur
+    const vy = MH-30;
+    put("cow", 62, vy+9, 2); put("sheep", 64, vy+9, 2); put("pig", 63, vy+10, 2);
+    put("chicken", 40, vy+3, 3); put("sheep", 52, vy+16, 3);
   }
   function updateAnimals(){
     if (mode!=="over") return;
@@ -1556,12 +1594,12 @@ const World = (() => {
       }
     } else if (m.type==="bush"){
       // arbustos estilo pokemon: aquí viven los guardianes
-      if (Math.random() < 0.35){
-        // sacudida del arbusto (Arbusto 1.gif de Karol) antes de la captura
+      // los "hot" (que ya se sacudían solos) siempre dan encuentro y guardián raro
+      if (m.hot || Math.random() < 0.35){
         bushFx = { x: player.x, y: player.y, t0: Date.now() };
         Sfx.play("encounter");
-        const biome = m.biome;
-        setTimeout(() => { bushFx = null; UI.startCaptureFromWorld(biome); }, 950);
+        const biome = m.biome, rare = !!m.hot;
+        setTimeout(() => { bushFx = null; UI.startCaptureFromWorld(biome, rare); }, 950);
       }
     } else if (m.type==="cavedoor"){
       enterCave();
@@ -1712,6 +1750,22 @@ const World = (() => {
     for (let y=y0;y<y1;y++)
       for (let x=Math.max(0,x0);x<x1;x++)
         drawTile(ground[y][x], x, y, camX, camY);
+
+    // arbustos "calientes": se sacuden solos de a ratos (hay un guardián raro)
+    if (imgs.ssBush){
+      const PERIOD = 4600, DUR = 950;
+      for (let y=y0;y<y1;y++) for (let x=x0;x<x1;x++){
+        const m = meta[y]?.[x];
+        if (!m || m.type!=="bush" || !m.hot) continue;
+        const t = (Date.now() + ((x*137 + y*311) % PERIOD)) % PERIOD;
+        if (t < DUR){
+          const fr = Math.min(12, (t/73)|0);
+          ctx.drawImage(imgs.ssBush, fr*48,0,48,48,
+            Math.round(x*TILE*SCALE-camX), Math.round((y*TILE-3)*SCALE-camY),
+            TILE*SCALE, TILE*SCALE);
+        }
+      }
+    }
 
     const sprites = [];
     for (let y=0;y<MH;y++) for (let x=0;x<MW;x++){
@@ -2110,5 +2164,10 @@ const World = (() => {
     for (let y=0;y<MH;y++) for (let x=0;x<MW;x++) if (ground[y][x]===name) out.push([x,y]);
     return out;
   }
-  return { start, debug, playerFrameURL, tp, findGround };
+  function debugBushes(){
+    let total=0; const hots=[];
+    for (let y=0;y<MH;y++) for (let x=0;x<MW;x++){ const m=meta[y]?.[x]; if (m?.type==="bush"){ total++; if (m.hot) hots.push([x,y]); } }
+    return { total, hot: hots.length, hots, sprite: !!(imgs && imgs.ssBush && imgs.ssBush.naturalWidth) };
+  }
+  return { start, debug, playerFrameURL, tp, findGround, debugBushes };
 })();

@@ -310,8 +310,8 @@ const UI = (() => {
       setTimeout(() => { renderMap(); showScreen("screen-map"); }, 1500);
     }
   }
-  function startCaptureFromWorld(biome){
-    const c = Creatures.roll(biome);
+  function startCaptureFromWorld(biome, rare){
+    const c = Creatures.roll(biome, rare);
     if (c) startCapture(c);
   }
 
