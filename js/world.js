@@ -61,13 +61,13 @@ const World = (() => {
     caveWallFace2:{ i:"cv", x:2, y:2 },
     caveRock: { i:"cv", x:8, y:4 },
     // interior
-    // piso de madera de las casas (assets/gfx/floor_b.png, del B.png de Karol)
-    floorA:   { i:"fb", x:0, y:0 }, floorB:{ i:"fb", x:1, y:0 },
-    floorC:   { i:"fb", x:0, y:1 }, floorD:{ i:"fb", x:1, y:1 },
+    // piso de madera de las casas (assets/gfx/floor_b.png, del B.png de Karol; 48px/tile)
+    floorA:   { i:"fb", x:0, y:0, hi:true }, floorB:{ i:"fb", x:1, y:0, hi:true },
+    floorC:   { i:"fb", x:0, y:1, hi:true }, floorD:{ i:"fb", x:1, y:1, hi:true },
     wallTop:  { i:"in", x:4, y:0 },
     wallFace: { i:"in", x:6, y:0 },
     wallFace2:{ i:"in", x:6, y:1 },
-    rug:      { i:"in", x:1, y:8, baseFloor:true },
+    rug:      { i:"rugc", x:0, y:0, hi:true, baseFloor:true },
     exitMat:  { i:"in", x:5, y:6 },
   };
   const DECOR = {
@@ -905,6 +905,23 @@ const World = (() => {
   }
   // Hierba alta estilo pokemon: matas oscuras en zigzag (procedural)
   // Hierba alta estilo Cute Fantasy (paleta armónica con Grass_Middle)
+  // alfombra tejida 48px (roja cálida, combina con el piso de madera)
+  function makeRugTile(){
+    const S = TILE*SCALE;
+    const c = document.createElement("canvas");
+    c.width = S; c.height = S;
+    const x = c.getContext("2d");
+    x.fillStyle = "#a63d3d"; x.fillRect(0,0,S,S);          // base
+    x.fillStyle = "#8a2f33"; x.fillRect(0,0,S,3); x.fillRect(0,S-3,S,3);
+    x.fillRect(0,0,3,S); x.fillRect(S-3,0,3,S);            // borde
+    x.fillStyle = "#e0b45c";                                // línea dorada
+    x.fillRect(5,5,S-10,2); x.fillRect(5,S-7,S-10,2);
+    x.fillRect(5,5,2,S-10); x.fillRect(S-7,5,2,S-10);
+    x.fillStyle = "rgba(255,255,255,0.06)";                 // trama tejida
+    for (let yy=9; yy<S-9; yy+=4) x.fillRect(9, yy, S-18, 2);
+    return c;
+  }
+
   function makeTallGrassTile(){
     const c = document.createElement("canvas");
     c.width = TILE; c.height = TILE;
@@ -1042,6 +1059,7 @@ const World = (() => {
       cff: cfFence, cfd: cfDecor, cfch: cfChest,
       cfhB: makeTintedCanvas(cfHouse, [96,110,160], 0.30),   // casa variante fría (gimnasios "barn")
       cfhG: makeTintedCanvas(cfHouse, [230,180,90], 0.28),   // casa variante cálida (tienda/alcaldía)
+      rugc: makeRugTile(),
       tg: makeTallGrassTile(),
       bsh: makeBushTile(),
       animals: {
@@ -1726,20 +1744,16 @@ const World = (() => {
   function drawTile(name, x, y, camX, camY){
     const t = TILES[autoTileName(name, x, y)] || TILES.grass;
     const dx=Math.round(x*TILE*SCALE-camX), dy=Math.round(y*TILE*SCALE-camY);
-    if (t.base){
-      const b = TILES.grass;
-      ctx.drawImage(imgs[b.i], b.x*TILE, b.y*TILE, TILE, TILE, dx, dy, TILE*SCALE, TILE*SCALE);
-    } else if (t.baseSand){
-      const b = TILES.sand;
-      ctx.drawImage(imgs[b.i], b.x*TILE, b.y*TILE, TILE, TILE, dx, dy, TILE*SCALE, TILE*SCALE);
-    } else if (t.baseWater){
-      const b = TILES.water;
-      ctx.drawImage(imgs[b.i], b.x*TILE, b.y*TILE, TILE, TILE, dx, dy, TILE*SCALE, TILE*SCALE);
-    } else if (t.baseFloor){
-      const b = TILES.floorA;
-      ctx.drawImage(imgs[b.i], b.x*TILE, b.y*TILE, TILE, TILE, dx, dy, TILE*SCALE, TILE*SCALE);
-    }
-    ctx.drawImage(imgs[t.i], t.x*TILE, t.y*TILE, TILE, TILE, dx, dy, TILE*SCALE, TILE*SCALE);
+    // def.hi = hoja en alta resolución (48px por tile, se dibuja 1:1 sin pixelar)
+    const blit = (def) => {
+      const ts = def.hi ? TILE*SCALE : TILE;
+      ctx.drawImage(imgs[def.i], def.x*ts, def.y*ts, ts, ts, dx, dy, TILE*SCALE, TILE*SCALE);
+    };
+    if (t.base) blit(TILES.grass);
+    else if (t.baseSand) blit(TILES.sand);
+    else if (t.baseWater) blit(TILES.water);
+    else if (t.baseFloor) blit(TILES.floorA);
+    blit(t);
   }
 
   let lastTick = 0;
