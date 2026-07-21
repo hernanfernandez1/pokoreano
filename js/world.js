@@ -43,10 +43,12 @@ const World = (() => {
     sandL:    { i:"ss", x:5, y:1 }, sandR:{ i:"ss", x:5, y:1 },
     sandTL:   { i:"ss", x:5, y:1 }, sandTR:{ i:"ss", x:5, y:1 },
     sandBL:   { i:"ss", x:5, y:1 }, sandBR:{ i:"ss", x:5, y:1 },
-    // camino de tierra ancho (Path 02 de Sunnyside): relleno pleno + cuñas de pasto en esquinas
-    path:     { i:"ss", x:12, y:7, base:true },
-    pathT:    { i:"ss", x:12, y:7, base:true }, pathB:{ i:"ss", x:12, y:7, base:true },
-    pathL:    { i:"ss", x:12, y:7, base:true }, pathR:{ i:"ss", x:12, y:7, base:true },
+    // camino de tierra (Path 02 de Sunnyside): relleno + bordes de pasto en los 4 lados
+    path:     { i:"ss", x:12, y:7, base:true },   // relleno liso
+    pathP1:   { i:"ss", x:9,  y:7, base:true },   // relleno con piedritas (textura)
+    pathP2:   { i:"ss", x:10, y:7, base:true },
+    pathT:    { i:"ss", x:16, y:8, base:true }, pathB:{ i:"ss", x:15, y:7, base:true },
+    pathL:    { i:"ss", x:14, y:8, base:true }, pathR:{ i:"ss", x:17, y:7, base:true },
     pathTL:   { i:"ss", x:13, y:7, base:true }, pathTR:{ i:"ss", x:14, y:7, base:true },
     pathBL:   { i:"ss", x:12, y:8, base:true }, pathBR:{ i:"ss", x:16, y:7, base:true },
     // muelle vertical (N-S): sección sólida rail|tabla|rail, se repite a lo largo
@@ -288,6 +290,24 @@ const World = (() => {
         solid[cy-1][x]=false; solid[cy][x]=false; solid[cy+1][x]=false;
       }
     });
+
+    // VALLAS que bordean el sendero (tramos cortos, como en la referencia; dejan aberturas)
+    const isPathT = (x,y) => ground[y]?.[x]==="path";
+    const fenceAt = (x,y) => {
+      if (x<2||x>=MW-2||y<2||y>=MH-2) return;
+      if (solid[y][x] || meta[y]?.[x] || decor[y]?.[x]) return;
+      if (isPathT(x,y) || WATERISH(ground[y][x])) return;
+      ground[y][x]="fenceH"; solid[y][x]=true;
+    };
+    // segmento horizontal de valla de largo len a partir de x0, en la fila y
+    const fenceRun = (x0,y,len) => { for (let x=x0;x<x0+len;x++) fenceAt(x,y); };
+    // flanquea el camino y=46: tramos cortos arriba (45) y abajo (48), evitando el río (x48-50)
+    fenceRun(10,45,7); fenceRun(34,45,7); fenceRun(66,45,7); fenceRun(100,45,7);
+    fenceRun(18,48,7); fenceRun(54,48,6); fenceRun(78,48,7); fenceRun(112,48,7);
+    // flanquea el camino del sur
+    const sy = MH-24;
+    fenceRun(14,sy-1,7); fenceRun(50,sy-1,7); fenceRun(88,sy-1,7);
+    fenceRun(26,sy+2,7); fenceRun(64,sy+2,7); fenceRun(102,sy+2,7);
 
     // árboles dispersos por la pradera y la costa alta
     [[8,14],[20,10],[26,16],[40,10],[14,22],[24,26],[40,30],[10,42],[24,43],[42,40],
@@ -1979,7 +1999,13 @@ const World = (() => {
       if (!N && !E) return "pathTR";
       if (!S && !W) return "pathBL";
       if (!S && !E) return "pathBR";
-      return "path";
+      if (!N) return "pathT";
+      if (!S) return "pathB";
+      if (!W) return "pathL";
+      if (!E) return "pathR";
+      // relleno interior: piedritas de a ratos (textura, no plano)
+      const h = (x*29 + y*53) % 7;
+      return h===0 ? "pathP1" : (h===3 ? "pathP2" : "path");
     }
     return name;
   }
