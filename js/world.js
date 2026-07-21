@@ -5,7 +5,7 @@
    ========================================================== */
 const World = (() => {
   const TILE = 16;
-  const SCALE = 3;
+  const SCALE = 2;   // vista más alejada (aérea, estilo isla) — antes 3
 
   // ---------- Tile atlas (img: "ow" overworld / "in" interior) ----------
   const TILES = {
@@ -358,8 +358,7 @@ const World = (() => {
     });
 
     spawnButterflies();
-
-    // (el molino se arma con piezas del tileset en la fase de edificios)
+    spawnClouds();
     mode = "over";
   }
 
@@ -1704,7 +1703,7 @@ const World = (() => {
             fr*96, 0, 96, 96,
             Math.round((player.px - 8)*SCALE - camX),
             Math.round((player.py - TILE)*SCALE - camY),
-            96, 96);
+            32*SCALE, 32*SCALE);
         } else {
           const frame = player.moving ? player.frame : 0;
           ctx.drawImage(playerSheet,
@@ -1718,6 +1717,7 @@ const World = (() => {
 
     drawAnimals(camX, camY);
     drawButterflies(camX, camY);
+    if (mode==="over") drawClouds(camX, camY);
 
     // sacudida del arbusto (13 frames del GIF de Karol, ~950ms)
     if (bushFx && imgs.ssBush){
@@ -1727,6 +1727,43 @@ const World = (() => {
         TILE*SCALE, TILE*SCALE);
     }
   }
+
+  // ---------- Nubes flotando sobre el mar (ambiente estilo Sunnyside) ----------
+  let clouds = [];
+  function spawnClouds(){
+    clouds = [];
+    // esparcidas por todo el mundo; derivan lento hacia el este
+    for (let i=0;i<14;i++){
+      clouds.push({
+        x: Math.random()*MW*TILE,
+        y: Math.random()*MH*TILE,
+        s: 0.9 + Math.random()*0.8,          // escala del puff
+        v: 2 + Math.random()*3,              // px/seg de deriva
+        seed: Math.random()*1000,
+      });
+    }
+  }
+  function drawClouds(camX, camY){
+    if (!clouds.length) return;
+    const worldPx = MW*TILE;
+    const t = Date.now()/1000;
+    ctx.save();
+    for (const c of clouds){
+      const wx = (c.x + t*c.v) % (worldPx + 200) - 100;   // deriva + wrap
+      const px = wx*SCALE - camX, py = c.y*SCALE - camY;
+      const S = c.s * SCALE;
+      // puff: varios círculos blancos con sombra suave
+      ctx.fillStyle = "rgba(255,255,255,0.92)";
+      const blobs = [[0,0,15],[14,2,12],[-14,3,12],[7,-7,11],[-8,-6,10],[22,4,8],[-22,5,8]];
+      // sombra inferior
+      ctx.fillStyle = "rgba(180,200,220,0.35)";
+      for (const [ox,oy,r] of blobs) circle(px+ox*S, py+(oy+3)*S, r*S);
+      ctx.fillStyle = "rgba(255,255,255,0.95)";
+      for (const [ox,oy,r] of blobs) circle(px+ox*S, py+oy*S, r*S);
+    }
+    ctx.restore();
+  }
+  function circle(x,y,r){ ctx.beginPath(); ctx.arc(x,y,r,0,7); ctx.fill(); }
 
   function drawBubble(n, camX, camY){
     if (Dialog.npc===n) return;
