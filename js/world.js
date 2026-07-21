@@ -87,9 +87,12 @@ const World = (() => {
     tree:   { i:"ssTree1", strip:4, fw:32, fh:34, w:2, h:3 },
     tree2:  { i:"ssTree2", strip:4, fw:28, fh:43, w:2, h:3 },
     windmill:{ i:"ssWindmill", strip:9, fw:112, fh:112, w:7, h:7 }, // molino animado
-    house:  { i:"cfh",  x:0, y:0, w:6, h:8 },   // casa azul (96x128)
-    barn:   { i:"cfhB", x:0, y:0, w:6, h:8 },   // casa tinte frío
-    houseG: { i:"cfhG", x:0, y:0, w:6, h:8 },   // casa tinte cálido (tienda)
+    // casas Sunnyside (48x64, 3 ancho x 4 alto, puerta abajo-centro)
+    house:  { i:"ssHouseBlue",   x:0, y:0, w:3, h:4 },
+    barn:   { i:"ssHouseGreen",  x:0, y:0, w:3, h:4 },
+    houseG: { i:"ssHouseOrange", x:0, y:0, w:3, h:4 },
+    houseR: { i:"ssHouseRed",    x:0, y:0, w:3, h:4 },
+    houseP: { i:"ssHousePurple", x:0, y:0, w:3, h:4 },
     lamp:   { i:"cfd",  x:4, y:4, w:1, h:3 },   // farol
     caveDoor: { i:"ow", x:4, y:31, w:4, h:2 },  // arco de piedra
     fountain: { i:"ow", x:22, y:9, w:3, h:3 },  // fuente de la plaza (3x3)
@@ -105,13 +108,13 @@ const World = (() => {
   const OW = { W:96, H:72 };
 
   const gymHouses = [
-    { key:"hangul",     x: 10, y: 8,  sprite:"house" },  // pradera NO
-    { key:"numeros",    x: 34, y: 6,  sprite:"barn"  },  // pradera N
-    { key:"particulas", x: 66, y: 12, sprite:"house" },  // bosque O
-    { key:"verbos",     x: 84, y: 22, sprite:"barn"  },  // bosque profundo
-    { key:"honor",      x: 72, y: 48, sprite:"house" },  // SE, cerca de la costa
-    { key:"topik1",     x: 34, y: 50, sprite:"barn"  },  // costa (puerta a la playa)
-    { key:"topik2",     x: 10, y: 36, sprite:"house" },  // pradera O
+    { key:"hangul",     x: 10, y: 8,  sprite:"house"   },  // pradera NO (azul)
+    { key:"numeros",    x: 34, y: 6,  sprite:"barn"    },  // pradera N (verde)
+    { key:"particulas", x: 66, y: 12, sprite:"houseR"  },  // bosque O (rojo)
+    { key:"verbos",     x: 84, y: 22, sprite:"houseP"  },  // bosque profundo (violeta)
+    { key:"honor",      x: 72, y: 48, sprite:"houseG"  },  // SE (naranja)
+    { key:"topik1",     x: 34, y: 50, sprite:"barn"    },  // costa (verde)
+    { key:"topik2",     x: 10, y: 36, sprite:"houseR"  },  // pradera O (rojo)
     // "maestro" vive dentro de la cueva (bioma bosque, NE)
   ];
 
@@ -383,16 +386,16 @@ const World = (() => {
       }
     }
   }
-  // Casa Cute Fantasy 6x8: base solida = filas 4-7, puerta abajo al centro
+  // Casa Sunnyside 3x4: base solida = filas 2-3, puerta abajo al centro (x+1)
   function putHouse(g){
     const x=g.x, y=g.y;
-    clearTreesRect(x-4, y-5, x+7, y+9);
+    clearTreesRect(x-3, y-3, x+5, y+6);
     decor[y][x] = { sprite:g.sprite, gym:g.key };
-    for (let dy=4;dy<8;dy++) for (let dx=0;dx<6;dx++){
+    for (let dy=2;dy<4;dy++) for (let dx=0;dx<3;dx++){
       if (solid[y+dy] === undefined || solid[y+dy][x+dx] === undefined) continue;
       solid[y+dy][x+dx]=true; meta[y+dy][x+dx]=null;
     }
-    const doorX=x+2, doorY=y+7;
+    const doorX=x+1, doorY=y+3;
     solid[doorY][doorX]=false;
     meta[doorY][doorX]={type:"gymdoor", key:g.key};
     if (doorY+1 < MH){
@@ -419,14 +422,14 @@ const World = (() => {
 
   // ---------- Tienda ----------
   function putBuilding(x, y, sprite, doorType, tag){
-    clearTreesRect(x-4, y-5, x+7, y+9);
+    clearTreesRect(x-3, y-3, x+5, y+6);
     const d = { sprite }; if (tag) d[tag]=true;
     decor[y][x] = d;
-    for (let dy=4;dy<8;dy++) for (let dx=0;dx<6;dx++){
+    for (let dy=2;dy<4;dy++) for (let dx=0;dx<3;dx++){
       if (solid[y+dy] === undefined || solid[y+dy][x+dx] === undefined) continue;
       solid[y+dy][x+dx]=true; meta[y+dy][x+dx]=null;
     }
-    const doorX=x+2, doorY=y+7;
+    const doorX=x+1, doorY=y+3;
     solid[doorY][doorX]=false;
     meta[doorY][doorX]={type:doorType};
     if (doorY+1 < MH){
@@ -519,26 +522,27 @@ const World = (() => {
     decor[10][21] = { sprite:"lamp" };  solid[12][21]=true;
 
     const placeBuilding = (spr, x, y, doorType, extra) => {
+      clearTreesRect(x-2, y-2, x+4, y+5);
       decor[y][x] = Object.assign({ sprite:spr }, extra||{});
-      for (let dy=4;dy<8;dy++) for (let dx=0;dx<6;dx++){
+      for (let dy=2;dy<4;dy++) for (let dx=0;dx<3;dx++){
         if (solid[y+dy]?.[x+dx] === undefined) continue;
         solid[y+dy][x+dx]=true; meta[y+dy][x+dx]=null;
       }
       if (doorType){
-        solid[y+7][x+2]=false; meta[y+7][x+2]={type:doorType};
-        if (y+8<H){ solid[y+8][x+2]=false; ground[y+8][x+2]="path"; meta[y+8][x+2]=null; }
+        solid[y+3][x+1]=false; meta[y+3][x+1]={type:doorType};
+        if (y+4<H){ solid[y+4][x+1]=false; ground[y+4][x+1]="path"; meta[y+4][x+1]=null; }
       }
     };
 
-    // ALCALDÍA (norte centro) — casa cálida grande
-    placeBuilding("houseG", 14, 0, "alcaldiadoor", { alcaldia:true });
-    // CAFÉ (oeste) — casa azul
-    placeBuilding("house", 4, 3, "cafedoor", { cafe:true });
-    // ACADEMIA (este) — casa con tinte frío
-    placeBuilding("barn", 24, 3, "academiadoor", { academia:true });
-    // casa de la abuela + NOREBANG (karaoke 노래방)
-    placeBuilding("house", 4, 15, "abuelacasadoor");
-    placeBuilding("barn", 24, 15, "norebangdoor", { norebang:true });
+    // ALCALDÍA (norte centro) — techo naranja
+    placeBuilding("houseG", 15, 1, "alcaldiadoor", { alcaldia:true });
+    // CAFÉ (oeste) — techo rojo
+    placeBuilding("houseR", 5, 4, "cafedoor", { cafe:true });
+    // ACADEMIA (este) — techo verde
+    placeBuilding("barn", 25, 4, "academiadoor", { academia:true });
+    // casa de la abuela (azul) + NOREBANG (karaoke, violeta)
+    placeBuilding("house", 5, 16, "abuelacasadoor");
+    placeBuilding("houseP", 25, 16, "norebangdoor", { norebang:true });
 
     // NPCs del pueblo
     const npcs = [];
@@ -914,7 +918,7 @@ const World = (() => {
     return c;
   }
   // Animales: hoja 2x2 de 32x32 mirando a la izquierda → [normal, espejo]
-  function makeAnimalSheets(img){
+  function makeAnimalSheets(img, frames, fw){
     const L = document.createElement("canvas");
     L.width = img.width; L.height = img.height;
     L.getContext("2d").drawImage(img, 0, 0);
@@ -923,7 +927,7 @@ const World = (() => {
     const g = R.getContext("2d");
     g.translate(img.width, 0); g.scale(-1, 1);
     g.drawImage(img, 0, 0);
-    return { L, R };
+    return { L, R, frames: frames||2, fw: fw||32, fh: img.height };
   }
   // Hierba alta estilo pokemon: matas oscuras en zigzag (procedural)
   // Hierba alta estilo Cute Fantasy (paleta armónica con Grass_Middle)
@@ -1041,10 +1045,11 @@ const World = (() => {
     const CF = "assets/gfx/cute";
     const [ow, inn, cv, ch, np, kr, fb,
            ss, ssTree1, ssTree2, ssBush, ssWindmill, ssSmoke,
+           ssChicken, ssCow, ssPig, ssSheep, ssDuck,
+           ssHouseBlue, ssHouseGreen, ssHouseOrange, ssHouseRed, ssHousePurple,
            kaWalkW, kaWalkE, kaRunW, kaRunE,
            cfGrass, cfWater, cfWaterM, cfPath, cfPathM, cfBeach,
-           cfOak, cfHouse, cfBridge, cfFence, cfDecor, cfChest,
-           cfChicken, cfCow, cfPig, cfSheep] = await Promise.all([
+           cfOak, cfHouse, cfBridge, cfFence, cfDecor, cfChest] = await Promise.all([
       loadImg("assets/gfx/Overworld.png"),
       loadImg("assets/gfx/Inner.png"),
       loadImg("assets/gfx/cave.png"),
@@ -1058,6 +1063,16 @@ const World = (() => {
       loadImg("assets/gfx/ss/bush_shake.png"),
       loadImg("assets/gfx/ss/windmill.png"),
       loadImg("assets/gfx/ss/smoke.png"),
+      loadImg("assets/gfx/ss/chicken.png"),
+      loadImg("assets/gfx/ss/cow.png"),
+      loadImg("assets/gfx/ss/pig.png"),
+      loadImg("assets/gfx/ss/sheep.png"),
+      loadImg("assets/gfx/ss/duck.png"),
+      loadImg("assets/gfx/ss/house_blue.png"),
+      loadImg("assets/gfx/ss/house_green.png"),
+      loadImg("assets/gfx/ss/house_orange.png"),
+      loadImg("assets/gfx/ss/house_red.png"),
+      loadImg("assets/gfx/ss/house_purple.png"),
       loadImg("assets/gfx/karol_anim/walk_w.png"),
       loadImg("assets/gfx/karol_anim/walk_e.png"),
       loadImg("assets/gfx/karol_anim/run_w.png"),
@@ -1074,14 +1089,11 @@ const World = (() => {
       loadImg(CF+"/Outdoor decoration/Fences.png"),
       loadImg(CF+"/Outdoor decoration/Outdoor_Decor_Free.png"),
       loadImg(CF+"/Outdoor decoration/Chest.png"),
-      loadImg(CF+"/Animals/Chicken/Chicken.png"),
-      loadImg(CF+"/Animals/Cow/Cow.png"),
-      loadImg(CF+"/Animals/Pig/Pig.png"),
-      loadImg(CF+"/Animals/Sheep/Sheep.png"),
     ]);
     imgs = {
       ow, "in": inn, cv, ch, np, kr, fb,
       ss, ssTree1, ssTree2, ssBush, ssWindmill, ssSmoke,
+      ssHouseBlue, ssHouseGreen, ssHouseOrange, ssHouseRed, ssHousePurple,
       kaWalkW, kaWalkE, kaRunW, kaRunE,
       cfg: cfGrass, cfw: cfWater, cfwm: cfWaterM,
       cfp: cfPath, cfpm: cfPathM, cfb: cfBeach,
@@ -1093,10 +1105,11 @@ const World = (() => {
       tg: makeTallGrassTile(),
       bsh: makeBushTile(),
       animals: {
-        chicken: makeAnimalSheets(cfChicken),
-        cow: makeAnimalSheets(cfCow),
-        pig: makeAnimalSheets(cfPig),
-        sheep: makeAnimalSheets(cfSheep),
+        chicken: makeAnimalSheets(ssChicken, 4, 32),
+        cow: makeAnimalSheets(ssCow, 4, 32),
+        pig: makeAnimalSheets(ssPig, 4, 32),
+        sheep: makeAnimalSheets(ssSheep, 4, 32),
+        duck: makeAnimalSheets(ssDuck, 4, 16),
       },
     };
     // --- Puentes de madera ---
@@ -1142,6 +1155,8 @@ const World = (() => {
     put("cow", 44, 11, 2); put("pig", 46, 12, 2); put("chicken", 43, 12, 2); put("sheep", 46, 10, 2);
     // libres por la pradera
     put("sheep", 18, 26, 3); put("chicken", 26, 36, 3); put("cow", 12, 22, 3);
+    // patos junto al lago de la pradera
+    put("duck", 22, 27, 2); put("duck", 19, 33, 2);
   }
   function updateAnimals(){
     if (mode!=="over") return;
@@ -1177,11 +1192,14 @@ const World = (() => {
       const sheets = imgs.animals?.[a.kind];
       if (!sheets) return;
       const sheet = a.facing===1 ? sheets.L : sheets.R;
-      const col = a.moving ? a.frame : 0;
-      const fx = a.facing===1 ? col : 1-col; // hoja espejada invierte columnas
-      ctx.drawImage(sheet, fx*32, 0, 32, 32,
-        Math.round((a.px-8)*SCALE - camX), Math.round((a.py-16)*SCALE - camY),
-        32*SCALE, 32*SCALE);
+      const n = sheets.frames, fw = sheets.fw, fh = sheets.fh;
+      // idle animado: siempre ciclando (Sunnyside son loops de reposo suaves)
+      const col = ((a.t/16)|0) % n;
+      const fx = a.facing===1 ? col : (n-1-col); // hoja espejada invierte columnas
+      ctx.drawImage(sheet, fx*fw, 0, fw, fh,
+        Math.round((a.px + TILE/2 - fw/2)*SCALE - camX),
+        Math.round((a.py + TILE - fh)*SCALE - camY),
+        fw*SCALE, fh*SCALE);
     });
   }
 
